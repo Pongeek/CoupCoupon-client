@@ -1,0 +1,139 @@
+.Header {
+  background-color: #fff;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Add this line */
+}
+
+.Header h1 {
+  @media (max-width: 600px) {
+    display: none;
+  }
+  margin: 0;
+  font-size: 2em;
+  color: #2f80ed;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 0px;
+  position: absolute;
+  right: 10px;
+}
+
+.LogoHeader {
+  display: flex;
+  height: 50px;
+  cursor: pointer;
+  transition: transform 0.3s;
+  margin-left: 25px;
+  justify-content: left;
+}
+
+.LogoHeader:hover {
+  transform: scale(1.1);
+}
+
+.Register button {
+  font-size: 1em;
+  color: #fcfcfc;
+  padding: 5px 10px;
+  border: 1px solid #2f80ed;
+  border-radius: 10px;
+  background-color: #2f80ed;
+  transition: background-color 0.3s, color 0.3s;
+  cursor: pointer;
+}
+
+.Register button:hover {
+  background-color: #56ccf2;
+  color: #fcfcfc;
+}
+
+.AuthButton button {
+  font-size: 1em;
+  color: #2f80ed;
+  padding: 5px 10px;
+  border: 1px solid #2f80ed;
+  border-radius: 10px;
+  background-color: #fcfcfc;
+  transition: background-color 0.5s, color 0.5s;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.AuthButton button:hover {
+  background-color: #56ccf2;
+  color: #fcfcfc;
+}
+
+.Logout button {
+  font-size: 1em;
+  color: #fcfcfc;
+  padding: 5px 10px;
+  border: 1px solid #ff6347;
+  border-radius: 10px;
+  background-color: #ff6347;
+  transition: background-color 0.5s, color 0.5s;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.Logout button:hover {
+  background-color: #ff4500;
+  color: #fcfcfc;
+}
+
+@media (max-width: 600px) {
+  .Header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .auth-buttons {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .AuthButton,
+  .Register {
+    width: 100%;
+  }
+
+  .AuthButton button,
+  .Register button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 100px;
+  margin: 0 auto; /* Center the nav items */
+}
+
+nav ul li {
+  display: inline;
+}
+
+nav ul li a {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+}
+
+nav ul li a:hover {
+  text-decoration: underline;
+  color: #2f80ed;
+}
+
+.Header .Menu {
+  display: flex;
+  justify-content: center;
+  flex-grow: 1; /* Add this line to make the menu take up remaining space */
+  margin-right: 200px;
+}

@@ -1,0 +1,16 @@
+.Footer {
+    background-color: #fff;
+    padding: 10px;
+    position: fixed;
+    width: 100%;
+    bottom:0;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  footer p {
+    margin: 0;
+    font-size: 0.9em;
+    color: #999;
+  }
+
+  

@@ -1,0 +1,24 @@
+.CustomerMenu {
+    padding: 20px;
+}
+
+.CouponItem {
+    cursor: pointer;
+    transition: transform 0.2s;
+    background-color: #f5f5f5;
+
+}
+
+.CouponItem:hover {
+    transform: scale(1.05);
+}
+.Filters {
+    margin-bottom: 20px;
+    background-color: #f5f5f5;
+
+}
+
+.Welcome {
+    margin-bottom: 20px;
+    text-align: center;
+}
