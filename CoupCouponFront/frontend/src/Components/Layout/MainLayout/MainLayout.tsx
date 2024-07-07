@@ -10,6 +10,8 @@ import "./MainLayout.css";
  * It conditionally renders the Header and Menu components based on the current route.
  * @returns {JSX.Element} The rendered MainLayout component.
  */
+
+
 export function MainLayout(): JSX.Element {
     const location = useLocation();
 

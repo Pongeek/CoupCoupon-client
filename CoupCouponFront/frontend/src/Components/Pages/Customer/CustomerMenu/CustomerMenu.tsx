@@ -228,7 +228,7 @@ export function CustomerMenu(): JSX.Element {
             <Dialog open={thankYouOpen} onClose={() => setThankYouOpen(false)}>
                 <DialogTitle>Thank You</DialogTitle>
                 <DialogContent>Thank you for purchasing this coupon!</DialogContent>
-                <DialogActions>
+                <DialogActions> 
                     <Button onClick={() => setThankYouOpen(false)}>Close</Button>
                 </DialogActions>
             </Dialog>
