@@ -35,7 +35,8 @@ public enum ErrorMsg {
 
     COUPON_DATE_EXPIRED("Coupon date has expired."),
     USER_MUST_LOG_IN("Unauthorized to do it."),
-    CAN_NOT_UPDATE_CUSTOMER_NAME_OR_ID("Update Failed: Customer's Name and ID can not be updated.");
+    CAN_NOT_UPDATE_CUSTOMER_NAME_OR_ID("Update Failed: Customer's Name and ID can not be updated."),
+    CUSTOMER_DOES_NOT_EXIST("Customer does not exist in the database.");
 
 
 

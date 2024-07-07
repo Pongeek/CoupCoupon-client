@@ -6,6 +6,7 @@ import com.johnbryce.coupcouponpt2.Exceptions.ErrorMsg;
 import com.johnbryce.coupcouponpt2.Repository.CouponRepository;
 import com.johnbryce.coupcouponpt2.Repository.CustomerRepository;
 import com.johnbryce.coupcouponpt2.Services.CustomerService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -36,36 +37,44 @@ public class CustomerServiceImp extends ClientService implements CustomerService
         return customerID;
     }
 
+    @Transactional
     @Override
     public void purchaseCoupon(int couponID) throws CoupCouponSystemException {
-
         isLoggedIn();
 
-        Coupon isCouponExist = couponRepository.findCouponById(couponID);
-        Customer customer = customerRepository.findCustomerById(customerID);
-        List<Coupon> customerCouponsList = customer.getCoupons();
+        // Fetch the coupon and customer
+        Coupon isCouponExist = couponRepository.findById(couponID)
+                .orElseThrow(() -> new CoupCouponSystemException(ErrorMsg.COUPON_ID_NOT_FOUND));
+        Customer customer = customerRepository.findById(customerID)
+                .orElseThrow(() -> new CoupCouponSystemException(ErrorMsg.CUSTOMER_DOES_NOT_EXIST));
 
-        if(isCouponExist == null){
-            throw new CoupCouponSystemException(ErrorMsg.COUPON_ID_NOT_FOUND);
-        }
-
-        boolean isCouponPurchasedByCustomer = couponRepository.existsByIdAndCustomersId(couponID,customerID);
-        if(isCouponPurchasedByCustomer){
+        // Check if the coupon is already purchased by the customer
+        boolean isCouponPurchasedByCustomer = couponRepository.existsByIdAndCustomersId(couponID, customerID);
+        if (isCouponPurchasedByCustomer) {
             throw new CoupCouponSystemException(ErrorMsg.COUPON_ALREADY_PURCHASED);
         }
 
-        if(isCouponExist.getAmount() <= 1){
+        // Check if the coupon is out of stock
+        if (isCouponExist.getAmount() <= 1) {
             throw new CoupCouponSystemException(ErrorMsg.COUPON_OUT_OF_STOCK);
         }
 
-        if(isCouponExist.getEndDate().getTime() < Calendar.getInstance().getTimeInMillis()){
+        // Check if the coupon is expired
+        if (isCouponExist.getEndDate().getTime() < Calendar.getInstance().getTimeInMillis()) {
             throw new CoupCouponSystemException(ErrorMsg.COUPON_DATE_EXPIRED);
         }
 
+        // Decrease the coupon amount
         isCouponExist.setAmount(isCouponExist.getAmount() - 1);
-        customerCouponsList.add(isCouponExist);
-        customer.setCoupons(customerCouponsList);
+
+        // Add the coupon to the customer's list
+        customer.getCoupons().add(isCouponExist);
+
+        // Save the changes
+        couponRepository.save(isCouponExist);
         customerRepository.saveAndFlush(customer);
+        System.out.println("Customer after purchase: " + customer);
+        customer.getCoupons().forEach(coupon -> System.out.println("Coupon: " + coupon));
     }
 
     @Override

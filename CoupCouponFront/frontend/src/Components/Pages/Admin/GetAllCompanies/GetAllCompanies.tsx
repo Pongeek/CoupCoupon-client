@@ -9,6 +9,10 @@ import axiosJWT from "../../../Util/AxiosJWT";
 import { useNavigate } from "react-router-dom";
 import { checkData } from "../../../Util/checkData";
 
+/**
+ * GetAllCompanies component that displays a list of all companies and provides functionality to add, update, and delete companies.
+ * @returns {JSX.Element} The rendered GetAllCompanies component.
+ */
 export function GetAllCompanies(): JSX.Element {
     const [companies, setCompanies] = useState<CompanyDetails[]>([]);
     const [addCompanyDialogOpen, setAddCompanyDialogOpen] = useState(false);
@@ -30,12 +34,12 @@ export function GetAllCompanies(): JSX.Element {
 
     const navigate = useNavigate();
 
+    // useEffect hook to fetch companies when the component mounts
     useEffect(() => {
         const fetchCompanies = async () => {
             checkData();
             try {
                 const response = await axiosJWT.get("http://localhost:8080/CoupCouponAPI/Admin/GetAllCompanies");
-                console.log("Companies", response);
                 store.dispatch(getCompaniesAction(response.data));
                 setCompanies(response.data);
             } catch (error) {
@@ -49,15 +53,15 @@ export function GetAllCompanies(): JSX.Element {
         } else {
             setCompanies(store.getState().admin.companies);
         }
-
     }, [navigate]);
 
+    // Handle delete company action
     const handleDeleteCompany = (companyId: number) => {
         setCompanyToDelete(companyId);
         setDeleteCompanyDialogOpen(true);
     };
 
-
+    // Confirm delete company action
     const confirmDeleteCompany = async () => {
         if (companyToDelete !== null) {
             try {
@@ -76,11 +80,13 @@ export function GetAllCompanies(): JSX.Element {
         }
     };
 
+    // Handle update company action
     const handleUpdateCompany = (company: CompanyDetails) => {
         setCompanyToUpdate(company);
         setUpdateCompanyDialogOpen(true);
     };
 
+    // Confirm update company action
     const handleUpdate = async () => {
         if (companyToUpdate !== null) {
             try {
@@ -101,7 +107,7 @@ export function GetAllCompanies(): JSX.Element {
                 store.dispatch(getCompaniesAction(response.data));
                 const updatedCompanies = companies.map(company => company.id === companyToUpdate.id ? companyToUpdate : company);
                 setCompanies(updatedCompanies);
-                console.log("Company updated successfully", companyToUpdate);
+                console.log("Company updated successfully", companyToUpdate.name);
                 setUpdateCompanyDialogOpen(false);
                 setCompanyToUpdate(null);
 
@@ -111,6 +117,7 @@ export function GetAllCompanies(): JSX.Element {
         }
     }
 
+    // Handle add company action
     const handleAddCompany = async () => {
         try {
             const checkEmailExists = await axiosJWT.get(`http://localhost:8080/CoupCouponAPI/Login/IsEmailExist/${companyToAdd.email}`);
@@ -135,7 +142,7 @@ export function GetAllCompanies(): JSX.Element {
             const response = await axiosJWT.post("http://localhost:8080/CoupCouponAPI/Admin/AddCompany", companyToAdd);
             store.dispatch(addCompanyAction(companyToAdd));
             setCompanies([...companies, companyToAdd]);
-            console.log("Company added successfully", companyToAdd);
+            console.log("Company added successfully", companyToAdd.name);
             setAddCompanyDialogOpen(false);
             setCompanyToAdd({ id: 0, name: "", email: "", password: "", coupons: [] });
         } catch (error) {
@@ -146,13 +153,13 @@ export function GetAllCompanies(): JSX.Element {
         window.location.reload();
     }
 
-
-
+    // Handle row click to view company details
     const handleRowClick = (company: CompanyDetails) => {
         setSelectedCompany(company);
         setOpen(true);
     };
 
+    // Handle close dialog
     const handleClose = () => {
         setOpen(false);
         setSelectedCompany(null);
@@ -298,8 +305,6 @@ export function GetAllCompanies(): JSX.Element {
                     </Button>
                 </DialogActions>
             </Dialog>
-
-
         </div>
     );
 }

@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.SignatureException;
+import java.util.List;
 
 @RestController
 @RequestMapping("CoupCouponAPI/Admin")
@@ -182,7 +183,6 @@ public class AdminController {
 
     @GetMapping("/GetAllCustomers")
     @ResponseStatus(HttpStatus.OK)
-    @JsonView(Views.Public.class)
     public ResponseEntity<?> getAllCustomers(@RequestHeader("Authorization") String jwt)
             throws SignatureException, CoupCouponSystemException {
 
@@ -193,8 +193,10 @@ public class AdminController {
         if (jwtUtil.isTokenExpired(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token is expired");
         }
+        List<Customer> customers = adminService.getAllCustomers();
+        customers.forEach(customer -> customer.getCoupons().size());
 
-        return new ResponseEntity<>(adminService.getAllCustomers(),getHeaders(jwt),HttpStatus.OK);
+        return new ResponseEntity<>(customers,getHeaders(jwt),HttpStatus.OK);
     }
 
     @GetMapping("/GetCustomer/{customerID}")

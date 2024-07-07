@@ -1,6 +1,7 @@
 import { CompanyDetails } from "../Model/CompanyDetails";
 import { CouponDetails } from "../Model/CouponDetails";
 import { CustomerDetails } from "../Model/CustomerDetails";
+import { RESET_STORE } from "./ResetStore";
 
 export class CustomerAndCouponState{
     public customers : CustomerDetails[] = [];
@@ -18,7 +19,7 @@ export enum CustomerAndCouponsActionType{
 }
 
 export interface CustomerAndCouponAction{
-    type: CustomerAndCouponsActionType;
+    type: CustomerAndCouponsActionType | typeof RESET_STORE;
     payload: any;
 }
 
@@ -81,6 +82,9 @@ export function CompanyReducer(currentState: CustomerAndCouponState = new Custom
         case CustomerAndCouponsActionType.getCouponsByMaxPrice:
             newState.coupons = [...newState.coupons, ...action.payload];
             break;
+
+        case RESET_STORE:
+            return new CustomerAndCouponState();
     }
     return newState;
 }

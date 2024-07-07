@@ -9,12 +9,16 @@ import { useNavigate } from "react-router-dom";
 import { addCustomerAction, deleteCustomerAction, getCustomersAction, updateCustomerAction } from "../../../Redux/AdminReducer";
 import { Button, TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Dialog, DialogTitle, DialogContent, DialogActions, Typography, TextField } from "@mui/material";
 import axios from "axios";
+import { CouponDetails } from "../../../Model/CouponDetails";
 
-
+/**
+ * GetAllCustomers component that displays a list of all customers and provides functionality to add, update, and delete customers.
+ * @returns {JSX.Element} The rendered GetAllCustomers component.
+ */
 export function GetAllCustomers(): JSX.Element {
-
     const [customers, setCustomers] = useState<CustomerDetails[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetails | null>(null);
+    const [customerCoupons, setCustomerCoupons] = useState<CouponDetails[]>([]);
     const [open, setOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [customerToDelete, setCustomerToDelete] = useState<number | null>(null);
@@ -33,14 +37,13 @@ export function GetAllCustomers(): JSX.Element {
 
     const navigate = useNavigate();
 
-
-
-
+    // useEffect hook to fetch customers when the component mounts
     useEffect(() => {
         checkData();
         const fetchCustomers = async () => {
             try {
                 const response = await axiosJWT.get("http://localhost:8080/CoupCouponAPI/Admin/GetAllCustomers");
+                console.log("Customers:", response.data);
                 store.dispatch(getCustomersAction(response.data));
                 setCustomers(store.getState().admin.customers);
             } catch (error) {
@@ -57,17 +60,20 @@ export function GetAllCustomers(): JSX.Element {
         }
     }, [navigate]);
 
-
+    // Handle row click to view customer details
     const handleRowClick = (customer: CustomerDetails) => {
+        console.log("Customer coupons:", customer.coupons);
         setSelectedCustomer(customer);
         setOpen(true);
     };
 
+    // Handle close dialog
     const handleClose = () => {
         setOpen(false);
         setSelectedCustomer(null);
     };
 
+    // Handle add customer submit
     const handleAddCustomerSubmit = async () => {
         try {
             const checkEmailExists = await axios.get(`http://localhost:8080/CoupCouponAPI/Login/IsEmailExist/${newCustomer.email}`);
@@ -86,7 +92,7 @@ export function GetAllCustomers(): JSX.Element {
             const response = await axiosJWT.post("http://localhost:8080/CoupCouponAPI/Admin/AddCustomer", newCustomer);
             store.dispatch(addCustomerAction(newCustomer));
             setCustomers([...customers, newCustomer]);
-            console.log("Add a new customer succesfully",newCustomer);
+            console.log("Add a new customer successfully", newCustomer);
             setAddCustomerDialogOpen(false);
             setEmailExistsError(null);
             setNewCustomer({ id: 0, firstName: '', lastName: '', email: '', password: '', coupons: [] });
@@ -96,15 +102,16 @@ export function GetAllCustomers(): JSX.Element {
         window.location.reload();
     };
 
+    // Handle delete customer action
     const handleDeleteCustomer = (customerId: number) => {
         setCustomerToDelete(customerId);
         setDeleteDialogOpen(true);
     };
 
+    // Confirm delete customer action
     const confirmDeleteCustomer = async () => {
         if (customerToDelete !== null) {
             try {
-
                 const response = await axiosJWT.delete(`http://localhost:8080/CoupCouponAPI/Admin/DeleteCustomer/${customerToDelete}`);
 
                 if (response.status === 202 || response.status === 200) {
@@ -130,11 +137,13 @@ export function GetAllCustomers(): JSX.Element {
         }
     };
 
+    // Handle update customer action
     const handleUpdateCustomer = (customer: CustomerDetails) => {
         setCustomerToUpdate(customer);
         setUpdateDialogOpen(true);
     };
 
+    // Confirm update customer action
     const handleUpdate = async () => {
         if (customerToUpdate) {
             try {
@@ -156,18 +165,14 @@ export function GetAllCustomers(): JSX.Element {
                 store.dispatch(updateCustomerAction(customerToUpdate, customerToUpdate.id));
                 const updatedCustomers = customers.map(c => c.id === customerToUpdate.id ? customerToUpdate : c);
                 setCustomers(updatedCustomers);
-                console.log("Update a customer succesfully",customerToUpdate);
+                console.log("Update a customer successfully", customerToUpdate);
                 setUpdateDialogOpen(false);
                 setCustomerToUpdate(null);
-
             } catch (error) {
                 console.error("Error updating customer:", error);
-                
             }
         }
     };
-
-
 
     return (
         <div className="GetAllCustomers">
@@ -323,4 +328,3 @@ export function GetAllCustomers(): JSX.Element {
         </div>
     );
 }
-

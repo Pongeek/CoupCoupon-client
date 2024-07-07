@@ -2,14 +2,17 @@ import { useEffect, useState } from "react";
 import "./GetAllCoupons.css";
 import { CouponDetails } from "../../../Model/CouponDetails";
 import { useNavigate } from "react-router-dom";
-import { Table, TableHead, TableRow, TableCell, TableBody, Button, TableContainer, Paper, DialogTitle, Dialog, DialogContent, DialogContentText, Typography, DialogActions } from "@mui/material";
+import { Table, TableHead, TableRow, TableCell, TableBody, Button, TableContainer, Paper, DialogTitle, Dialog, DialogContent, Typography, DialogActions } from "@mui/material";
 import { SingleCoupon } from "../../SingleCoupon/SingleCoupon";
 import { store } from "../../../Redux/store";
 import axiosJWT from "../../../Util/AxiosJWT";
 import { deleteCouponAction, getCouponsAction } from "../../../Redux/AdminReducer";
 import { checkData } from "../../../Util/checkData";
-import { getAllCouponsAction } from "../../../Redux/CouponReducer";
 
+/**
+ * GetAllCoupons component that displays a list of all coupons and provides functionality to delete coupons.
+ * @returns {JSX.Element} The rendered GetAllCoupons component.
+ */
 export function GetAllCoupons(): JSX.Element {
     const [coupon, setCoupon] = useState<CouponDetails[]>([]);
     const [selectedCoupon, setSelectedCoupon] = useState<CouponDetails | null>(null);
@@ -19,6 +22,7 @@ export function GetAllCoupons(): JSX.Element {
 
     const navigate = useNavigate();
 
+    // useEffect hook to fetch coupons when the component mounts
     useEffect(() => {
         const fetchCoupons = async () => {
             try {
@@ -30,8 +34,6 @@ export function GetAllCoupons(): JSX.Element {
                 }));
                 store.dispatch(getCouponsAction(coupons));
                 setCoupon(store.getState().admin.coupons);
-                console.log(store.getState().coupons.coupons);
-            
             } catch (error) {
                 console.log("Error fetching coupons:", error);
                 checkData();
@@ -45,20 +47,20 @@ export function GetAllCoupons(): JSX.Element {
         }
     }, [navigate]);
 
+    // Confirm delete coupon action
     const confirmDeleteCoupon = async () => {
-        if(couponToDelete !== null){
-            try{
-                const response = await axiosJWT.delete(`http://localhost:8080/CoupCouponAPI/Admin/DeleteCoupon/${couponToDelete}`);
+        if (couponToDelete !== null) {
+            try {
+                await axiosJWT.delete(`http://localhost:8080/CoupCouponAPI/Admin/DeleteCoupon/${couponToDelete}`);
                 const updateCoupons = coupon.filter((coupon) => coupon.id !== couponToDelete);
                 store.dispatch(getCouponsAction(updateCoupons));
                 store.dispatch(deleteCouponAction(couponToDelete));
                 setCoupon(store.getState().admin.coupons);
-            
 
                 setDeleteDialogOpen(false);
                 setCouponToDelete(null);
-                
-                console.log("Coupon deleted successfully");
+
+                console.log("Coupon deleted successfully", couponToDelete);
             } catch (error) {
                 console.log("Error deleting coupon:", error);
             }
@@ -66,26 +68,25 @@ export function GetAllCoupons(): JSX.Element {
             setDeleteDialogOpen(false);
             setCouponToDelete(null);
         }
-    }
+    };
 
+    // Handle delete coupon action
     const handleDeleteCoupon = (couponId: number) => {
         setCouponToDelete(couponId);
         setDeleteDialogOpen(true);
-    }
+    };
 
-
+    // Handle row click to view coupon details
     const handleRowClick = (coupon: CouponDetails) => {
         setSelectedCoupon(coupon);
         setOpen(true);
     };
 
+    // Handle close dialog
     const handleClose = () => {
         setOpen(false);
         setSelectedCoupon(null);
     };
-
-
-
 
     return (
         <div className="GetAllCoupons">
@@ -135,7 +136,7 @@ export function GetAllCoupons(): JSX.Element {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={() => {confirmDeleteCoupon()}} color="error">Delete</Button>
+                    <Button onClick={() => { confirmDeleteCoupon() }} color="error">Delete</Button>
                 </DialogActions>
             </Dialog>
         </div>

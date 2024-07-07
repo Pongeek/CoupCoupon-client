@@ -1,9 +1,6 @@
 package com.johnbryce.coupcouponpt2.Beans;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.*;
@@ -31,7 +28,7 @@ public class Coupon {
     private int companyID;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false,name = "category")
+    @Column(nullable = false, name = "category")
     @JsonView(Views.Public.class)
     private Category category;
 
@@ -45,6 +42,7 @@ public class Coupon {
 
     @JsonView(Views.Public.class)
     private Date startDate;
+
     @JsonView(Views.Public.class)
     private Date endDate;
 
@@ -57,11 +55,11 @@ public class Coupon {
     @Min(0)
     @JsonView(Views.Public.class)
     private double price;
+
     @JsonView(Views.Public.class)
     private String image;
 
-
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH})
     @JoinTable(name = "customers_vs_coupons",
             joinColumns = @JoinColumn(name = "coupon_id"),
             inverseJoinColumns = @JoinColumn(name = "customer_id"))
@@ -80,8 +78,6 @@ public class Coupon {
                 ", endDate = " + endDate +
                 ", amount = " + amount +
                 ", price = " + price +
-                ", image = '" + image + '\'' +" }";
+                ", image = '" + image + '\'' + " }";
     }
 }
-
-

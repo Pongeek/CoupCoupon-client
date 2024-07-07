@@ -1,5 +1,5 @@
 .CustomerMenu {
-    padding: 20px;
+    padding: 10px;
 }
 
 .CouponItem {
@@ -18,7 +18,7 @@
 
 }
 
-.Welcome {
-    margin-bottom: 20px;
+.CouponsToPurchase {
+    margin-bottom: 40px;
     text-align: center;
 }

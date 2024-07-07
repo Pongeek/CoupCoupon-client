@@ -12,6 +12,7 @@ import { GetAllCustomers } from "../../Pages/Admin/GetAllCustomers/GetAllCustome
 import { GetAllCompanies } from "../../Pages/Admin/GetAllCompanies/GetAllCompanies";
 import { GetAllCoupons } from "../../Pages/Admin/GetAllCoupons/GetAllCoupons";
 import { CompanyMenu } from "../../Pages/Company/CompanyMenu/CompanyMenu";
+import { GetCustomerCoupons } from "../../Pages/Customer/GetCustomerCoupons/GetCustomerCoupons";
 
 export function MainRoute(): JSX.Element {
     return (
@@ -28,6 +29,7 @@ export function MainRoute(): JSX.Element {
                 <Route path="/adminMenu/:id/customers" element={<GetAllCustomers/>} />
                 <Route path="/adminMenu/:id/companies" element={<GetAllCompanies/>} />
                 <Route path="/adminMenu/:id/coupons" element={<GetAllCoupons/>} />
+                <Route path="/customerMenu/:id/coupons" element={<GetCustomerCoupons/>} />
                 <Route path="*" element={<Page404/>}/>
             </Routes>
         </div>

@@ -9,6 +9,7 @@ import { store } from "../../Redux/store";
 import WhiteLogo from "../../assests/WhiteLogo.png";
 import { useState } from "react";
 import { getCustomerCouponsAction, getCustomerDetailsAction } from "../../Redux/CustomerReducer";
+import { getCouponsAction } from "../../Redux/AdminReducer";
 
 
 
@@ -46,7 +47,6 @@ export function LoginPage(): JSX.Element {
 
             const JWT = response.headers["authorization"].split(" ")[1];
             const decode_jwt = jwtDecode<jwtData>(JWT);
-            console.log(decode_jwt);
         
             let myAuth = {
                 id: decode_jwt.id,
@@ -57,19 +57,21 @@ export function LoginPage(): JSX.Element {
                 isLoggedIn: true
             };
 
-            console.log("User ID: " + myAuth.id);
 
             if(myAuth.userType === "ADMIN"){
                 store.dispatch(loginAction(myAuth));
                 navigate(`/adminMenu/${myAuth.id}`);
+
             }
             else if(myAuth.userType === "COMPANY"){
                 store.dispatch(loginAction(myAuth));
                 navigate(`/companyMenu/${myAuth.id}`);
+                // window.location.reload();
             }
             else if(myAuth.userType === "CUSTOMER"){
                 store.dispatch(loginAction(myAuth));
                 navigate(`/customerMenu/${myAuth.id}`);
+                // window.location.reload();
             }
             
         })

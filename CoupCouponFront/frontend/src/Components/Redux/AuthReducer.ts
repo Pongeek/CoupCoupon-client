@@ -1,3 +1,5 @@
+import { RESET_STORE } from "./ResetStore";
+
 export class authState{
     id: number = 0;
     email: string = "";
@@ -15,7 +17,7 @@ export enum AuthActionType {
 }
 
 export interface AuthAction {
-    type: AuthActionType,
+    type: AuthActionType | typeof RESET_STORE,
     payload?: any
 }
 
@@ -61,8 +63,11 @@ export function AuthReducer(currentState: authState = new authState(), action: A
         case AuthActionType.rehydrate:
             newState = action.payload;
             break;
+
+        case RESET_STORE:
+            newState = new authState();
+            break;
     }
-    console.log("THIS IS SPARTA ", newState);
     return newState;
 }
 

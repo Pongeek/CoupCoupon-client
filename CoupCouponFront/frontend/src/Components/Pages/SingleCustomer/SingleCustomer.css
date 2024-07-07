@@ -5,4 +5,42 @@
     margin: 10px;
 }
 
+.singleCustomer .MuiDialogContent-root {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
+.singleCustomer .MuiTypography-h6 {
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.singleCustomer .MuiTypography-body1 {
+    margin-bottom: 20px;
+}
+
+.singleCustomer .MuiList-root {
+    width: 100%;
+    max-width: 600px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+}
+
+.singleCustomer .MuiListItem-root {
+    border-bottom: 1px solid #ddd;
+}
+
+.singleCustomer .MuiListItem-root:last-child {
+    border-bottom: none;
+}
+
+.singleCustomer .MuiListItemText-primary {
+    font-weight: bold;
+}
+
+.singleCustomer .MuiListItemText-secondary {
+    color: #666;
+}

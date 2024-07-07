@@ -1,7 +1,46 @@
 .SingleCompany {
-	display: flex;
+    display: flex;
     flex-direction: column;
     align-items: center;
     margin: 10px;
 }
 
+.SingleCompany .MuiDialogContent-root {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.SingleCompany .MuiTypography-h6 {
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.SingleCompany .MuiTypography-body1 {
+    margin-bottom: 20px;
+}
+
+.SingleCompany .MuiList-root {
+    width: 100%;
+    max-width: 600px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+}
+
+.SingleCompany .MuiListItem-root {
+    border-bottom: 1px solid #ddd;
+}
+
+.SingleCompany .MuiListItem-root:last-child {
+    border-bottom: none;
+}
+
+.SingleCompany .MuiListItemText-primary {
+    font-weight: bold;
+}
+
+.SingleCompany .MuiListItemText-secondary {
+    color: #666;
+}

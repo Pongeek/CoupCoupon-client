@@ -14,7 +14,7 @@ import java.util.List;
 @Builder
 @Getter
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-@JsonIgnoreProperties(value = {"coupons"}, allowSetters = true,allowGetters = true)
+@JsonIgnoreProperties(value = {"coupons"}, allowSetters = true, allowGetters = true)
 public class Customer {
 
     @Id
@@ -31,14 +31,14 @@ public class Customer {
     private String lastName;
 
     @JsonView(Views.Public.class)
-    @Column(nullable = false,unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
     @JsonView(Views.Public.class)
     private String password;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH})
     @JoinTable(name = "customers_vs_coupons",
             joinColumns = @JoinColumn(name = "customer_id"),
             inverseJoinColumns = @JoinColumn(name = "coupon_id"))
@@ -55,5 +55,4 @@ public class Customer {
                 ", password = '" + password + '\'' + "\n" +
                 "coupons = " + (coupons != null ? coupons.toString() : "") + " }";
     }
-
 }

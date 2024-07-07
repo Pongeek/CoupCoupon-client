@@ -1,5 +1,6 @@
 import { CouponDetails } from "../Model/CouponDetails";
 import { CustomerDetails } from "../Model/CustomerDetails";
+import { RESET_STORE } from "./ResetStore";
 
 export class CustomerState{
     coupons: CouponDetails[] = [];
@@ -18,7 +19,7 @@ export enum CustomerActionType{
 }
 
 export interface CustomerAction{
-    type: CustomerActionType;
+    type: CustomerActionType | typeof RESET_STORE;
     payload: any;
 }
 
@@ -38,12 +39,12 @@ export function getCustomerDetailsAction(customer: CustomerDetails): CustomerAct
     return {type: CustomerActionType.getCustomerDetails, payload: customer};
 }
 
-export function getCouponsByCategoryAction(customerCoupons: CouponDetails[]): CustomerAction{
-    return {type: CustomerActionType.getCouponsByCategory, payload: customerCoupons};
+export function getCouponsByCategoryAction(coupon: CouponDetails[]): CustomerAction{
+    return {type: CustomerActionType.getCouponsByCategory, payload: coupon};
 }
 
-export function getCouponsByMaxPriceAction(customerCoupons: CouponDetails[]): CustomerAction{
-    return {type: CustomerActionType.getCouponsByMaxPrice, payload: customerCoupons};
+export function getCouponsByMaxPriceAction(coupon: CouponDetails[]): CustomerAction{
+    return {type: CustomerActionType.getCouponsByMaxPrice, payload: coupon};
 }
 
 export function CustomerReducer(currentState: CustomerState = new CustomerState(), action: CustomerAction): CustomerState{
@@ -76,6 +77,9 @@ export function CustomerReducer(currentState: CustomerState = new CustomerState(
         case CustomerActionType.getCouponsByMaxPrice:
             newState.customerCoupons = [...newState.customerCoupons, action.payload];
             break;
+
+        case RESET_STORE:
+            return new CustomerState();
     }
 
     return newState;

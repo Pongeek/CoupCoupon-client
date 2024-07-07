@@ -1,3 +1,56 @@
 .Main {
-	
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #409ef7; /* Light blue background */
+    color: #333; /* Dark text color for readability */
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+}
+
+.Main h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: #000000; /* Blue color for the heading */
+}
+
+.Main h2 {
+    font-size: 2rem;
+    margin-top: 20px;
+    color: #060606; /* Darker blue for subheadings */
+}
+
+.Main p {
+    font-size: 1.2rem;
+    margin: 10px 0;
+    line-height: 1.6;
+}
+
+.Main ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.Main li {
+    font-size: 1.1rem;
+    margin: 5px 0;
+    padding: 5px 10px;
+    background-color: #ffffff; /* Light grey background for list items */
+    border-radius: 5px;
+}
+
+.Main li:not(:last-child) {
+    margin-bottom: 10px;
+}
+
+.Main a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.Main a:hover {
+    color: #0056b3;
 }

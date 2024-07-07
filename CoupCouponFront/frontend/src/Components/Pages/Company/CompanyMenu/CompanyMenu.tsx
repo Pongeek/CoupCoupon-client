@@ -9,7 +9,9 @@ import axiosJWT from "../../../Util/AxiosJWT";
 import { addCouponAction, deleteCouponAction, getCompanyCouponsAction, updateCouponAction } from "../../../Redux/CompanyReducer";
 import { checkData } from "../../../Util/checkData";
 
-
+/**
+ * Enum for coupon categories.
+ */
 enum CouponCategory {
     FOOD = "FOOD",
     ELECTRONICS = "ELECTRICITY",
@@ -19,6 +21,10 @@ enum CouponCategory {
     RESTAURANT = "RESTAURANT"
 }
 
+/**
+ * CompanyMenu component that displays a list of all company coupons and provides functionality to add, update, and delete coupons.
+ * @returns {JSX.Element} The rendered CompanyMenu component.
+ */
 export function CompanyMenu(): JSX.Element {
     const [coupon, setCoupon] = useState<CouponDetails[]>([]);
     const [selectedCoupon, setSelectedCoupon] = useState<CouponDetails | null>(null);
@@ -34,6 +40,7 @@ export function CompanyMenu(): JSX.Element {
     const [amountError, setAmountError] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>("");
     const [maxPrice, setMaxPrice] = useState<number>(0);
+    const [today, setToday] = useState<string>(new Date().toISOString().split('T')[0]);
     const [newCoupon, setNewCoupon] = useState<CouponDetails>({
         id: 0,
         companyID: store.getState().auth.id,
@@ -47,9 +54,10 @@ export function CompanyMenu(): JSX.Element {
         image: ":)",
     });
 
+    // useEffect hook to fetch coupons when the component mounts
     useEffect(() => {
+        checkData();
         const fetchCoupons = async () => {
-            checkData();
             try {
                 const response = await axiosJWT.get("http://localhost:8080/CoupCouponAPI/Company/GetAllCompanyCoupons");
                 const coupons = response.data.map((coupon: CouponDetails) => ({
@@ -66,13 +74,15 @@ export function CompanyMenu(): JSX.Element {
                 navigate("/login");
             }
         };
-        if (store.getState().company.coupons.length === 0) {
+        if (store.getState().company.coupons.length === 0 ||
+            store.getState().company.coupons === undefined) {
             fetchCoupons();
         } else {
             setCoupon(store.getState().company.coupons);
         }
     }, [navigate]);
 
+    // Confirm delete coupon action
     const confirmDeleteCoupon = async () => {
         if (couponToDelete !== null) {
             try {
@@ -81,8 +91,6 @@ export function CompanyMenu(): JSX.Element {
                 store.dispatch(getCompanyCouponsAction(updateCoupons));
                 store.dispatch(deleteCouponAction(couponToDelete));
                 setCoupon(updateCoupons);
-
-
 
                 setDeleteDialogOpen(false);
                 setCouponToDelete(null);
@@ -97,6 +105,7 @@ export function CompanyMenu(): JSX.Element {
         }
     }
 
+    // Handle update coupon action
     const handleUpdate = async () => {
         console.log("couponToUpdate", couponToUpdate);
 
@@ -110,8 +119,18 @@ export function CompanyMenu(): JSX.Element {
                     setTitleExistsError(null);
                 }
             }
+
+            // Validate dates
+            const today = new Date().toISOString().split('T')[0];
+            if (couponToUpdate.startDate < today) {
+                console.error("Start date cannot be before today");
+                return;
+            }
+            if (couponToUpdate.endDate < couponToUpdate.startDate) {
+                console.error("End date cannot be before start date");
+                return;
+            }
             try {
-                console.log("couponToUpdate", couponToUpdate);
                 // Check if startDate and endDate are valid
                 if (!couponToUpdate.startDate || !couponToUpdate.endDate) {
                     console.error("Invalid date properties in couponToUpdate");
@@ -119,12 +138,11 @@ export function CompanyMenu(): JSX.Element {
                 }
 
                 const response = await axiosJWT.put(`http://localhost:8080/CoupCouponAPI/Company/UpdateCoupon/${couponToUpdate.id}`, couponToUpdate);
-                console.log("API response:", response.data);
 
                 store.dispatch(updateCouponAction(couponToUpdate, couponToUpdate.id));
                 const updatedCoupon = coupon.map((coupon) => coupon.id === couponToUpdate.id ? couponToUpdate : coupon);
                 setCoupon(updatedCoupon);
-                console.log("Coupon updated successfully");
+                console.log("Coupon updated successfully", couponToUpdate.title);
                 setUpdateDialogOpen(false);
                 setCouponToUpdate(null);
             } catch (error) {
@@ -133,9 +151,17 @@ export function CompanyMenu(): JSX.Element {
         }
     };
 
+    // Handle add coupon submit
     const handleAddCouponSubmit = async () => {
-        console.log("newCoupon", newCoupon);
         const companyCouponList: CouponDetails[] = store.getState().company.coupons;
+        // Validate dates
+        const today = new Date().toISOString().split('T')[0];
+        if (newCoupon.startDate < today) {
+            return;
+        }
+        if (newCoupon.endDate < newCoupon.startDate) {
+            return;
+        }
         for (let i = 0; i < companyCouponList.length; i++) {
             if (companyCouponList[i].title === newCoupon.title) {
                 setTitleExistsError("Title already exists");
@@ -157,20 +183,17 @@ export function CompanyMenu(): JSX.Element {
                 setAmountError(null);
             }
 
-
             if (!newCoupon.startDate || !newCoupon.endDate) {
                 console.error("Invalid date properties in couponToUpdate");
                 return;
             }
 
-
             try {
                 const response = await axiosJWT.post("http://localhost:8080/CoupCouponAPI/Company/AddCoupon", newCoupon);
-                console.log("API response:", response.data);
                 store.dispatch(addCouponAction(newCoupon));
                 const updatedCoupons = [...coupon, newCoupon];
                 setCoupon(updatedCoupons);
-                console.log("Coupon added successfully");
+                console.log("Coupon added successfully", newCoupon.title);
                 setAddCouponDialogOpen(false);
                 setNewCoupon({
                     id: 0,
@@ -192,21 +215,23 @@ export function CompanyMenu(): JSX.Element {
         }
     }
 
-
+    // Fetch coupons by category
     const fetchCouponsByCategory = async (category: string) => {
-        if(category === "ALL"){
+        if (category === "ALL") {
             setCoupon(store.getState().company.coupons);
-        }else{
-        const response = await axiosJWT.get(`http://localhost:8080/CoupCouponAPI/Company/GetCouponsByCategory/${category}`);
-        setCoupon(response.data);
+        } else {
+            const response = await axiosJWT.get(`http://localhost:8080/CoupCouponAPI/Company/GetCouponsByCategory/${category}`);
+            setCoupon(response.data);
+        }
     }
-    }
-    
+
+    // Fetch coupons by max price
     const fetchCouponsByMaxPrice = async (price: number) => {
         const response = await axiosJWT.get(`http://localhost:8080/CoupCouponAPI/Company/GetCouponsByMaxPrice/${price}`);
         setCoupon(response.data);
     }
 
+    // Handle category change
     const handleCategoryChange = (e: React.ChangeEvent<{ value: unknown }>) => {
         const category = e.target.value as string;
         setSelectedCategory(category);
@@ -214,37 +239,36 @@ export function CompanyMenu(): JSX.Element {
         setMaxPrice(0);
     };
 
+    // Handle max price change
     const handleMaxPriceChange = (e: React.ChangeEvent<{ value: unknown }>) => {
         const price = e.target.value as number;
         setMaxPrice(price);
-        if (price === null || price === undefined ) {
+        if (price === null || price === undefined) {
             setMaxPrice(0); // Set to 0 if the input is empty
         }
         fetchCouponsByMaxPrice(price);
         setSelectedCategory("ALL");
     };
 
-
-
-
-
+    // Handle update coupon action
     const handleUpdateCoupon = (coupon: CouponDetails) => {
         setCouponToUpdate(coupon);
         setUpdateDialogOpen(true);
     }
 
-
+    // Handle delete coupon action
     const handleDeleteCoupon = (couponId: number) => {
         setCouponToDelete(couponId);
         setDeleteDialogOpen(true);
     }
 
-
+    // Handle row click to view coupon details
     const handleRowClick = (coupon: CouponDetails) => {
         setSelectedCoupon(coupon);
         setOpen(true);
     };
 
+    // Handle close dialog
     const handleClose = () => {
         setOpen(false);
         setSelectedCoupon(null);
@@ -384,6 +408,8 @@ export function CompanyMenu(): JSX.Element {
                                 fullWidth
                                 margin="normal"
                                 variant="outlined"
+                                InputLabelProps={{ shrink: true }}
+                                inputProps={{ min: new Date().toISOString().split('T')[0] }}
                             />
                             <TextField
                                 type="date"
@@ -393,6 +419,8 @@ export function CompanyMenu(): JSX.Element {
                                 fullWidth
                                 margin="normal"
                                 variant="outlined"
+                                InputLabelProps={{ shrink: true }}
+                                inputProps={{ min: couponToUpdate.startDate }}
                             />
                             <TextField
                                 type="number"
@@ -462,6 +490,8 @@ export function CompanyMenu(): JSX.Element {
                         fullWidth
                         margin="normal"
                         variant="outlined"
+                        InputLabelProps={{ shrink: true }}
+                        inputProps={{ min: new Date().toISOString().split('T')[0] }}
                     />
                     <TextField
                         type="date"
@@ -471,6 +501,8 @@ export function CompanyMenu(): JSX.Element {
                         fullWidth
                         margin="normal"
                         variant="outlined"
+                        InputLabelProps={{ shrink: true }}
+                        inputProps={{ min: newCoupon.startDate }}
                     />
                     <TextField
                         type="number"

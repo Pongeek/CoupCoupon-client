@@ -26,18 +26,6 @@ public class CustomerController {
     private final CustomerServiceImp customerService;
     private final JWT jwtUtil;
 
-//    @PostMapping("/CustomerLogin")
-//    @ResponseStatus(HttpStatus.OK)
-//    public ResponseEntity<String> login(@RequestParam String email, @RequestParam String password, HttpSession session)
-//            throws CoupCouponSystemException {
-//
-//        boolean isLoggedIn = customerService.login(email, password);
-//        if (isLoggedIn) {
-//            session.setAttribute("customerID",customerService.getCustomerDetails().getId());
-//            return ResponseEntity.ok("Customer ID: " + session.getAttribute("customerID") + ", Logged in successfully.");
-//        }
-//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Log in failed, incorrect password or email");
-//    }
 
     @PostMapping("/PurchaseCoupon/{couponID}")
     @ResponseStatus(HttpStatus.ACCEPTED)
