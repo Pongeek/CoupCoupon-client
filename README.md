@@ -16,6 +16,7 @@ The application is designed to provide a seamless user experience with efficient
 - **CSS**: Cascading Style Sheets, used for styling the front end to ensure a visually appealing and responsive design.
 - **REST API**: The backend exposes RESTful APIs for communication between the frontend and backend.
 - **JWT (JSON Web Tokens)**: Used for secure user authentication and authorization.
+- **HTML
 
 ## Features
 - **User Authentication**: Secure login and registration system using JWT.
@@ -82,7 +83,7 @@ The CustomerController handles customer-related operations. A customer can perfo
 1. Purchase a coupon
 2. Get all purchased coupons
 3. Get purchased coupons by category
-4. Get purchased coupons at maximum price
+4. Get purchased coupons at a maximum price
 5. Get customer details
 6. Get all available coupons
 
@@ -102,7 +103,7 @@ This controller manages the log in process for all user types and generates JWT 
 
 ### Project Structure
 
-The frontend of the CoupCoupon project is built using React with TypeScript. The project follows a typical React application structure with components, utilities, and state management.
+The front end of the CoupCoupon project is built using React with TypeScript. The project follows a typical React application structure with components, utilities, and state management.
 
 ### Key Technologies
 
