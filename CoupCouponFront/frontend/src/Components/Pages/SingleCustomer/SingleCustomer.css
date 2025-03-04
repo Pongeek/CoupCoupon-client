@@ -1,0 +1,218 @@
+.SingleCustomer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Dialog */
+.customer-dialog .MuiPaper-root {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.dialog-title {
+    background-color: #f5f7fa;
+    padding: 20px 24px !important;
+    flex-shrink: 0;
+}
+
+.customer-avatar {
+    background-color: #3498db !important;
+    color: white !important;
+    width: 60px !important;
+    height: 60px !important;
+    font-size: 24px !important;
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
+}
+
+.customer-name {
+    font-weight: 700 !important;
+    color: #2c3e50;
+}
+
+.customer-id {
+    color: #95a5a6 !important;
+    font-size: 0.85rem !important;
+}
+
+.dialog-content {
+    padding: 24px !important;
+    overflow-y: auto !important;
+}
+
+/* Info Section */
+.info-section {
+    padding: 0 0 20px 0;
+}
+
+.info-item {
+    margin-bottom: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.info-item:hover {
+    background-color: #f8f9fa;
+}
+
+.info-icon {
+    color: #3498db;
+    margin-right: 16px;
+}
+
+/* Divider */
+.section-divider {
+    margin: 16px 0 !important;
+    background-color: #ecf0f1 !important;
+}
+
+/* Coupons Section */
+.coupons-section {
+    padding-top: 16px;
+}
+
+.section-header {
+    margin-bottom: 16px;
+}
+
+.section-icon {
+    color: #3498db;
+    margin-right: 10px;
+}
+
+.section-title {
+    font-weight: 600 !important;
+    color: #2c3e50;
+    flex-grow: 1;
+}
+
+.coupons-count {
+    background-color: rgba(52, 152, 219, 0.1) !important;
+    color: #3498db !important;
+    font-weight: 500 !important;
+}
+
+.coupons-container {
+    background-color: #f8f9fa !important;
+    border-radius: 12px !important;
+    padding: 0 !important;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+}
+
+.coupon-list-item {
+    padding: 16px !important;
+    transition: background-color 0.2s;
+}
+
+.coupon-list-item:hover {
+    background-color: #f1f6fa;
+}
+
+.coupon-avatar {
+    background-color: #2ecc71 !important;
+    color: white !important;
+}
+
+.coupon-company-avatar {
+    background-color: #e74c3c !important;
+    color: white !important;
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 12px !important;
+    border: 2px solid white;
+}
+
+.coupon-title {
+    font-weight: 600 !important;
+    color: #2c3e50;
+}
+
+.coupon-description {
+    color: #7f8c8d !important;
+    margin: 4px 0 !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.coupon-price {
+    background-color: rgba(46, 204, 113, 0.1) !important;
+    color: #2ecc71 !important;
+    font-weight: 600 !important;
+}
+
+.coupon-category {
+    background-color: rgba(52, 152, 219, 0.1) !important;
+    color: #3498db !important;
+    font-size: 0.75rem !important;
+}
+
+.date-icon {
+    color: #95a5a6;
+    font-size: 14px !important;
+    margin-right: 4px;
+}
+
+.coupon-expiry {
+    color: #95a5a6 !important;
+    font-size: 0.75rem !important;
+}
+
+.no-coupons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    gap: 16px;
+}
+
+/* Dialog Actions */
+.dialog-actions {
+    padding: 16px 24px !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+    background-color: #fff;
+    flex-shrink: 0;
+}
+
+/* Scrollbar styling */
+.coupons-container::-webkit-scrollbar {
+    width: 8px;
+    display: block;
+}
+
+.coupons-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.coupons-container::-webkit-scrollbar-thumb {
+    background: #d0d0d0;
+    border-radius: 10px;
+}
+
+.coupons-container::-webkit-scrollbar-thumb:hover {
+    background: #a0a0a0;
+}
+
+/* Pagination styling */
+.MuiPagination-root {
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+
+.MuiPagination-root .MuiPaginationItem-root {
+    color: #3498db;
+}
+
+.MuiPagination-root .Mui-selected {
+    background-color: #3498db !important;
+    color: white !important;
+}

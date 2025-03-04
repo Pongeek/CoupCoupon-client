@@ -1,0 +1,38 @@
+.Box {
+    display: inline-block;
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin: 5px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    transition: transform 0.2s;
+  }
+  
+  .Box h2 {
+    margin-top: 0;
+    font-size: 1.5em;
+    color: #2f80ed;
+  }
+  
+  .Box p {
+    font-size: 1em;
+    color: #666;
+  }
+  
+  /* Added styling for main layout */
+  .MainLayout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  .MainLayout main {
+    flex: 1; /* This will make the main content area take up all available space */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .MainLayout footer {
+    flex-shrink: 0; /* Prevent the footer from shrinking */
+  }

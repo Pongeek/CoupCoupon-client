@@ -1,0 +1,190 @@
+.GetAllCoupons {
+	padding: 20px;
+	background-color: #f9f9f9;
+	min-height: calc(100vh - 80px);
+	border-radius: 8px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.GetAllCoupons h1 {
+	color: #2c3e50;
+	margin-bottom: 1.5rem;
+	font-weight: 600;
+	text-align: center;
+	position: relative;
+}
+
+.GetAllCoupons h1::after {
+	content: "";
+	position: absolute;
+	bottom: -10px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 80px;
+	height: 3px;
+	background-color: #3498db;
+	border-radius: 2px;
+}
+
+.table-actions-container {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.search-filter-container {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.table-container {
+	margin-bottom: 20px;
+	overflow-x: auto;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	border-radius: 8px;
+}
+
+.MuiTableHead-root {
+	background-color: #f2f7fd;
+}
+
+.MuiTableHead-root .MuiTableCell-root {
+	font-weight: 600;
+	color: #34495e;
+	text-align: left !important;
+	padding: 16px;
+}
+
+.MuiTableCell-root {
+	text-align: left !important;
+	padding: 12px 16px;
+	white-space: nowrap;
+}
+
+.MuiTableRow-root {
+	transition: background-color 0.3s;
+}
+
+.MuiTableRow-root:hover {
+	background-color: #e6edf1;
+}
+
+.GetAllCoupons .MuiButton-root {
+	margin: 0 5px;
+	text-transform: none;
+	font-weight: 500;
+	padding: 8px 16px;
+	border-radius: 4px;
+	transition: all 0.3s;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.GetAllCoupons .MuiButton-root:hover {
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	transform: translateY(-2px);
+}
+
+.add-button {
+	background-color: #2ecc71;
+	color: white;
+}
+
+.refresh-button {
+	color: #3498db;
+	border: 1px solid #e0e0e0;
+	background-color: white;
+}
+
+.MuiDialog-paper {
+	padding: 10px;
+	border-radius: 12px;
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.MuiDialogTitle-root {
+	background-color: #f5f7fa;
+	border-radius: 8px 8px 0 0;
+	padding: 20px 24px;
+}
+
+.MuiDialogContent-root {
+	padding: 20px 24px;
+}
+
+.MuiDialogActions-root {
+	padding: 16px 24px;
+	border-top: 1px solid #eaeaea;
+}
+
+.status-active {
+	color: #2ecc71;
+	font-weight: 500;
+	background-color: rgba(46, 204, 113, 0.1);
+	padding: 5px 10px;
+	border-radius: 15px;
+	display: inline-block;
+}
+
+.status-inactive {
+	color: #e74c3c;
+	font-weight: 500;
+	background-color: rgba(231, 76, 60, 0.1);
+	padding: 5px 10px;
+	border-radius: 15px;
+	display: inline-block;
+}
+
+/* Add specific alignment for the Actions column which should be centered */
+.MuiTableRow-root .MuiTableCell-root:last-child {
+	text-align: center !important;
+}
+
+.MuiTableHead-root .MuiTableCell-root:last-child {
+	text-align: center !important;
+}
+
+/* Add specific alignment for the Status column which should be centered */
+.MuiTableRow-root .MuiTableCell-root:nth-last-child(2) {
+	text-align: center !important;
+}
+
+.MuiTableHead-root .MuiTableCell-root:nth-last-child(2) {
+	text-align: center !important;
+}
+
+/* Price column centered */
+.MuiTableRow-root .MuiTableCell-root:nth-last-child(3) {
+	text-align: center !important;
+}
+
+.MuiTableHead-root .MuiTableCell-root:nth-last-child(3) {
+	text-align: center !important;
+}
+
+/* Amount column centered */
+.MuiTableRow-root .MuiTableCell-root:nth-last-child(4) {
+	text-align: center !important;
+}
+
+.MuiTableHead-root .MuiTableCell-root:nth-last-child(4) {
+	text-align: center !important;
+}
+
+@media (max-width: 768px) {
+	.table-actions-container {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.search-filter-container {
+		margin-bottom: 10px;
+	}
+
+	.GetAllCoupons {
+		padding: 15px 10px;
+	}
+}
