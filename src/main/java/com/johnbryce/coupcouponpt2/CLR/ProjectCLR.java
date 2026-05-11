@@ -16,8 +16,8 @@ import org.springframework.stereotype.Component;
 
 import java.sql.Date;
 
-@Order(1)
-@Component
+//@Order(1)
+//@Component
 @RequiredArgsConstructor
 public class ProjectCLR implements CommandLineRunner {
     private final AdminServiceImp adminServiceImp;
@@ -40,14 +40,8 @@ public class ProjectCLR implements CommandLineRunner {
                 .build();
         loginDetailsRepository.save(loginDTO);
 
-        Credentials credentials = new Credentials("admin@admin.com","admin");
-        try{
-            adminServiceImp.login(credentials);
-            System.out.println("Admin was logged in");
-
-        }catch(Exception e){
-            System.out.println(e.getMessage());
-        }
+        // Authentication is now handled by Spring Security + JWT
+        System.out.println("Admin seed data created");
 
 
         //--------------------------------------addCompany-----------------------------------
@@ -90,15 +84,7 @@ public class ProjectCLR implements CommandLineRunner {
             }
         }
 
-        //------------------------------------Company Login------------------------------------------
-        System.out.println("\n------------------------------------Company Login----------------------------------------");
-        credentials = new Credentials("Company2@gmail.com","Company2");
-        try{
-            companyService.login(credentials);
-        } catch (Exception err) {
-            System.out.println(err.getMessage());
-        }
-
+        // Company login is now handled by Spring Security + JWT
         System.out.println("Adding 6 new coupons...");
 
         Coupon coupon3 = Coupon.builder()

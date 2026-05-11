@@ -169,7 +169,7 @@ public class AdminCLR implements CommandLineRunner {
         System.out.println("\n--------------------------*** adminController Test - printCompany ***----------------------------");
 
         System.out.println("\nPrinting all Companies:");
-        adminServiceImp.getAllCompanies().forEach(System.out::println);
+        adminServiceImp.getAllCompanies(org.springframework.data.domain.Pageable.unpaged()).forEach(System.out::println);
 
         System.out.println("\nPrinting a company that does not exist in the database to test an exception");
         try {
@@ -327,7 +327,7 @@ public class AdminCLR implements CommandLineRunner {
         System.out.println("\n-------------------------*** AdminController Test - printCustomer ***------------------------");
         System.out.println("\nPrinting all Customers:");
 
-        adminServiceImp.getAllCustomers().forEach(System.out::println);
+        adminServiceImp.getAllCustomers(org.springframework.data.domain.Pageable.unpaged()).forEach(System.out::println);
 
         System.out.println("\nPrinting one customer:");
         try {

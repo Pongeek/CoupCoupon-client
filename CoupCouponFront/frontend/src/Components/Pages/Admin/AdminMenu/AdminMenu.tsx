@@ -1,134 +1,189 @@
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { getCompaniesAction, getCouponsAction, getCustomersAction } from "../../../Redux/AdminReducer";
-import { checkData } from "../../../Util/checkData";
-import "./AdminMenu.css";
-import { store } from "../../../Redux/store";
-import axiosJWT from "../../../Util/AxiosJWT";
-import { getAllCouponsAction } from "../../../Redux/CouponReducer";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Grid, Typography, Box, Card, CardContent, CardActionArea } from '@mui/material';
+import {
+  People as PeopleIcon,
+  Business as BusinessIcon,
+  LocalOffer as CouponIcon,
+  TrendingUp as TrendingIcon,
+  ArrowForward as ArrowIcon,
+} from '@mui/icons-material';
+import { PageTransition, StaggerContainer, StaggerItem } from '../../../shared/PageTransition';
+import { StatCard, StatCardSkeleton } from '../../../shared';
+import { PageHeader } from '../../../shared/PageHeader';
+import { useAppSelector } from '../../../../hooks/useAppStore';
+import axiosJWT from '../../../Util/AxiosJWT';
 
-/**
- * AdminMenu component that serves as the main dashboard for the admin.
- * It fetches and displays data related to customers, companies, and coupons.
- * @returns {JSX.Element} The rendered AdminMenu component.
- */
 export function AdminMenu(): JSX.Element {
-    // State for storing dashboard statistics
-    const [stats, setStats] = useState({
-        customers: 0,
-        companies: 0,
-        coupons: 0
-    });
+  const navigate = useNavigate();
+  const { name, id: userId } = useAppSelector(state => state.auth);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    customers: 0,
+    companies: 0,
+    coupons: 0,
+  });
 
-    // useEffect hook to fetch data when the component mounts
-    useEffect(() => {
-        // Check initial data
-        checkData();
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [customersRes, companiesRes, couponsRes] = await Promise.all([
+          axiosJWT.get(`${import.meta.env.VITE_API_URL}/admin/customers`),
+          axiosJWT.get(`${import.meta.env.VITE_API_URL}/admin/companies`),
+          axiosJWT.get(`${import.meta.env.VITE_API_URL}/admin/coupons`),
+        ]);
 
-        // Fetch all customers
-        axiosJWT.get("http://localhost:8080/CoupCouponAPI/Admin/GetAllCustomers")
-            .then((response) => {
-                store.dispatch(getCustomersAction(response.data));
-                setStats(prev => ({ ...prev, customers: response.data.length }));
-            })
-            .catch((error) => {
-                console.error("Error getting all customers:", error);
-            });
+        setStats({
+          customers: Array.isArray(customersRes.data) ? customersRes.data.length : customersRes.data.content?.length || 0,
+          companies: Array.isArray(companiesRes.data) ? companiesRes.data.length : companiesRes.data.content?.length || 0,
+          coupons: Array.isArray(couponsRes.data) ? couponsRes.data.length : couponsRes.data.content?.length || 0,
+        });
+      } catch (error) {
+        console.error('Error fetching admin stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        // Fetch all coupons
-        axiosJWT.get("http://localhost:8080/CoupCouponAPI/Admin/GetAllCoupons")
-            .then((response) => {
-                const coupons = response.data.map((coupon: any) => ({
-                    ...coupon,
-                    startDate: coupon.startDate,
-                    endDate: coupon.endDate,
-                }));
-                store.dispatch(getCouponsAction(coupons));
-                setStats(prev => ({ ...prev, coupons: coupons.length }));
-            })
-            .catch((error) => {
-                console.error("Error getting all coupons:", error);
-            });
+    fetchStats();
+  }, []);
 
-        // Fetch all companies
-        axiosJWT.get("http://localhost:8080/CoupCouponAPI/Admin/GetAllCompanies")
-            .then((response) => {
-                store.dispatch(getCompaniesAction(response.data));
-                setStats(prev => ({ ...prev, companies: response.data.length }));
-            })
-            .catch((error) => {
-                console.error("Error getting all companies:", error);
-            });
+  const quickLinks = [
+    {
+      title: 'Manage Companies',
+      description: 'Add, update, or remove companies. View their coupons and details.',
+      icon: <BusinessIcon sx={{ fontSize: 40 }} />,
+      path: `/admin/${userId}/companies`,
+      color: 'primary.main',
+    },
+    {
+      title: 'Manage Customers',
+      description: 'View customer profiles, their purchased coupons, and account details.',
+      icon: <PeopleIcon sx={{ fontSize: 40 }} />,
+      path: `/admin/${userId}/customers`,
+      color: 'secondary.main',
+    },
+    {
+      title: 'All Coupons',
+      description: 'Browse and manage all coupons across the platform.',
+      icon: <CouponIcon sx={{ fontSize: 40 }} />,
+      path: `/admin/${userId}/coupons`,
+      color: 'success.main',
+    },
+  ];
 
-    }, []);
+  return (
+    <PageTransition>
+      <PageHeader
+        title={`Welcome back, ${name || 'Admin'}`}
+        subtitle="Here's an overview of your platform"
+      />
 
-    return (
-        <div className="AdminMenu">
-            <div className="admin-header">
-                <h1>Welcome to Admin Dashboard</h1>
-                <p className="admin-subtitle">Manage your entire platform in one place</p>
-            </div>
-            
-            <div className="admin-stats">
-                <div className="stat-card">
-                    <div className="stat-icon customers-icon">👥</div>
-                    <div className="stat-content">
-                        <h3>{stats.customers}</h3>
-                        <p>Customers</p>
-                    </div>
-                </div>
-                
-                <div className="stat-card">
-                    <div className="stat-icon companies-icon">🏢</div>
-                    <div className="stat-content">
-                        <h3>{stats.companies}</h3>
-                        <p>Companies</p>
-                    </div>
-                </div>
-                
-                <div className="stat-card">
-                    <div className="stat-icon coupons-icon">🎟️</div>
-                    <div className="stat-content">
-                        <h3>{stats.coupons}</h3>
-                        <p>Coupons</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div className="admin-features">
-                <div className="feature-card">
-                    <div className="feature-icon">👤</div>
-                    <h3>Customer Management</h3>
-                    <p>Add, update, or remove customer profiles. Monitor customer activity and coupon purchases.</p>
-                </div>
-                
-                <div className="feature-card">
-                    <div className="feature-icon">🏢</div>
-                    <h3>Company Management</h3>
-                    <p>Register new companies, update existing profiles, and manage company access rights.</p>
-                </div>
-                
-                <div className="feature-card">
-                    <div className="feature-icon">🎟️</div>
-                    <h3>Coupon Management</h3>
-                    <p>Review and moderate all coupons across the platform. Remove expired or inappropriate offers.</p>
-                </div>
-                
-                <div className="feature-card">
-                    <div className="feature-icon">📊</div>
-                    <h3>Analytics Dashboard</h3>
-                    <p>Track platform performance, user engagement, and coupon conversion rates in real-time.</p>
-                </div>
-            </div>
-            
-            <div className="quick-tips">
-                <h3>Admin Quick Tips</h3>
-                <p>
-                    🔹 Use the navigation menu to access different sections<br/>
-                    🔹 Click the CoupCoupon logo to return to this dashboard<br/>
-                    🔹 Regular system maintenance improves performance
-                </p>
-            </div>
-        </div>
-    );
+      {/* Stats Cards */}
+      <StaggerContainer>
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          {loading ? (
+            <>
+              {[1, 2, 3].map(i => (
+                <Grid item xs={12} sm={6} md={4} key={i}>
+                  <StatCardSkeleton />
+                </Grid>
+              ))}
+            </>
+          ) : (
+            <>
+              <Grid item xs={12} sm={6} md={4}>
+                <StaggerItem>
+                  <StatCard
+                    title="Total Customers"
+                    value={stats.customers}
+                    icon={<PeopleIcon />}
+                    color="#7C3AED"
+                  />
+                </StaggerItem>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <StaggerItem>
+                  <StatCard
+                    title="Total Companies"
+                    value={stats.companies}
+                    icon={<BusinessIcon />}
+                    color="#2563EB"
+                  />
+                </StaggerItem>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <StaggerItem>
+                  <StatCard
+                    title="Active Coupons"
+                    value={stats.coupons}
+                    icon={<CouponIcon />}
+                    color="#10B981"
+                  />
+                </StaggerItem>
+              </Grid>
+            </>
+          )}
+        </Grid>
+      </StaggerContainer>
+
+      {/* Quick Links */}
+      <Typography variant="h5" fontWeight={600} sx={{ mb: 2 }}>
+        Quick Actions
+      </Typography>
+      <StaggerContainer>
+        <Grid container spacing={3}>
+          {quickLinks.map((link) => (
+            <Grid item xs={12} md={4} key={link.title}>
+              <StaggerItem>
+                <Card
+                  sx={{
+                    height: '100%',
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: (theme) => theme.shadows[8],
+                    },
+                  }}
+                >
+                  <CardActionArea
+                    onClick={() => navigate(link.path)}
+                    sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
+                  >
+                    <Box
+                      sx={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: `${link.color}15`,
+                        color: link.color,
+                        mb: 2,
+                      }}
+                    >
+                      {link.icon}
+                    </Box>
+                    <Typography variant="h6" fontWeight={600} gutterBottom>
+                      {link.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2, flex: 1 }}>
+                      {link.description}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', color: 'primary.main' }}>
+                      <Typography variant="body2" fontWeight={600}>
+                        Go to {link.title.split(' ')[1]}
+                      </Typography>
+                      <ArrowIcon fontSize="small" sx={{ ml: 0.5 }} />
+                    </Box>
+                  </CardActionArea>
+                </Card>
+              </StaggerItem>
+            </Grid>
+          ))}
+        </Grid>
+      </StaggerContainer>
+    </PageTransition>
+  );
 }

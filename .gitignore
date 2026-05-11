@@ -31,3 +31,16 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Environment ###
+.env
+*.env.local
+
+### Application properties (may contain secrets) ###
+src/main/resources/application.properties
+
+### Claude Code ###
+.claude/
+
+### TypeScript build info ###
+tsconfig.tsbuildinfo

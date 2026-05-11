@@ -33,13 +33,8 @@ public class CustomerCLR implements CommandLineRunner {
         PrintUtils.customerServiceTest();
         //------------------------------------CustomerSystem Test*** - Login---------------------------------------------
         System.out.println("\n---------------------------CustomerService Test*** - Login-----------------------------------");
-        try {
-            if (customerService.login(new Credentials("Customer7@gmail.com", "Customer7")) > 0) {
-                System.out.println("\nCustomer Successfully logged in");
-            }
-        } catch (CoupCouponSystemException e) {
-            System.out.println(e.getMessage());
-        }
+        // Authentication is now handled by Spring Security + JWT
+        System.out.println("Customer login test skipped — uses JWT now");
 
         //---------------------------------CustomerSystem Test*** - purchaseCoupon--------------------------------------
         System.out.println("\n--------------------*** CustomerService Test - purchaseCoupon ***-----------------------");

@@ -1,11 +1,13 @@
+/* Global styles — minimal since MUI CssBaseline handles resets.
+   Keep only structural overrides here. */
+
 html, body, #root {
   margin: 0;
   padding: 0;
-  height: 100%;
-  text-align: center;
-  font-family: 'Arial', sans-serif;
-  color: #000000;
-  background-color: #ffffff;
-  grid-template-rows: 15% 80% 5%;
+  min-height: 100vh;
 }
 
+#root {
+  display: flex;
+  flex-direction: column;
+}

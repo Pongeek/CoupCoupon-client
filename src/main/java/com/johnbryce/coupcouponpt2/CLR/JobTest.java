@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 
 
 
-@Component
-@Order(4)
+//@Component
+//@Order(4)
 @RequiredArgsConstructor
 public class JobTest implements CommandLineRunner {
 

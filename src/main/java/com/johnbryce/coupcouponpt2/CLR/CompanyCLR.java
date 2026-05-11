@@ -37,14 +37,8 @@ public class CompanyCLR implements CommandLineRunner {
         //------------------------------------CompanySystem Test*** - Login---------------------------------------------
         System.out.println("--------------------------*** CompanySystem Test - Login ***------------------------------");
 
-        //Need to do it after I will make loginManager
-        try {
-            if (companyService.login(new Credentials("Company2@gmail.com", "Company2")) > 0) {
-                System.out.println("Company logged in successfully");
-            }
-        } catch (CoupCouponSystemException e) {
-            System.out.println(e.getMessage());
-        }
+        // Authentication is now handled by Spring Security + JWT
+        System.out.println("Company login test skipped — uses JWT now");
 
 
         //------------------------------------CompanySystem Test*** - addCoupon-----------------------------------------

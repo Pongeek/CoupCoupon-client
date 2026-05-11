@@ -2,64 +2,37 @@ package com.johnbryce.coupcouponpt2.Job;
 
 import com.johnbryce.coupcouponpt2.Beans.Coupon;
 import com.johnbryce.coupcouponpt2.Repository.CouponRepository;
-import jakarta.annotation.PostConstruct;
-import jakarta.transaction.Transactional;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-@Service
-public class CouponExpirationDailyJob implements Runnable {
+@Component
+@RequiredArgsConstructor
+public class CouponExpirationDailyJob {
 
-    @Autowired
-    private CouponRepository couponRepository;
-    @Autowired
-    private PlatformTransactionManager transactionManager;
+    private static final Logger log = LoggerFactory.getLogger(CouponExpirationDailyJob.class);
 
-    private volatile boolean quit = false;
+    private final CouponRepository couponRepository;
 
+    @Scheduled(cron = "0 0 2 * * *")
+    @Transactional
+    public void deleteExpiredCoupons() {
+        Date today = Date.valueOf(LocalDate.now());
 
-    @Override
-    public void run() {
-        while (!quit) {
-            try {
-                TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
-                transactionTemplate.execute(status -> {
-                    Date today = Date.valueOf(LocalDate.now());
-                    System.out.println(today);
-
-                    List<Coupon> allExpiredCoupons = couponRepository.findAllByEndDateIsBefore(today);
-                    System.out.println("-------List of expired coupons--------");
-                    allExpiredCoupons.forEach(System.out::println);
-
-                    List<Coupon> outOfStockCoupons = couponRepository.findAllByAmountIsLessThanEqual(1);
-                    System.out.println("-------List of out-of-stock coupons--------");
-                    outOfStockCoupons.forEach(System.out::println);
-
-                    System.out.println("Deleting all expired coupons");
-                    couponRepository.deleteCouponsByEndDateIsBefore(today);
-
-                    System.out.println("Deleting all expired coupons");
-                    couponRepository.deleteCouponsByAmountIsLessThanEqual(1);
-                    return null; // Return value not used
-                });
-
-                TimeUnit.HOURS.sleep(24);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                System.out.println("CouponExpirationDailyJob was interrupted: " + e.getMessage());
-            }
+        List<Coupon> expiredCoupons = couponRepository.findAllByEndDateIsBefore(today);
+        if (!expiredCoupons.isEmpty()) {
+            log.info("Found {} expired coupons to delete", expiredCoupons.size());
+            int deleted = couponRepository.deleteCouponsByEndDateIsBefore(today);
+            log.info("Deleted {} expired coupons", deleted);
+        } else {
+            log.debug("No expired coupons found");
         }
-    }
-
-    public void stopJob(){
-        quit = true;
     }
 }

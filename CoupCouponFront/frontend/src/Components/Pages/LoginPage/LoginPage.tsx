@@ -1,156 +1,202 @@
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import { SubmitHandler, useForm } from "react-hook-form";
-import "./LoginPage.css";
-import axiosJWT from "../../Util/AxiosJWT";
-import { jwtDecode } from "jwt-decode";
-import { loginAction, updateTokenAction } from "../../Redux/AuthReducer";
-import { store } from "../../Redux/store";
-import BlueLogo from "../../assests/BlueLogo.png";
-import { useState } from "react";
-import { getCustomerCouponsAction, getCustomerDetailsAction } from "../../Redux/CustomerReducer";
-import { getCouponsAction } from "../../Redux/AdminReducer";
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import {
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Alert,
+  InputAdornment,
+  IconButton,
+  CircularProgress,
+} from '@mui/material';
+import {
+  Visibility,
+  VisibilityOff,
+  Email as EmailIcon,
+  Lock as LockIcon,
+} from '@mui/icons-material';
+import { AuthLayout } from '../../../layouts/AuthLayout';
+import { PageTransition } from '../../shared/PageTransition';
+import { useAppDispatch } from '../../../hooks/useAppStore';
+import { login } from '../../../store/authSlice';
+import { authService } from '../../../api/authService';
+import type { AuthState } from '../../../types';
 
-
-
-
-type userDetails = {
-    email: string;
-    password: string;
-    userType: string;
-}
-
-type jwtData = { 
-    "id": number,
-    "userType": string,
-    "name": string,
-    "sub": string,
-    "iat": number,
-    "exp": number
+interface LoginFormData {
+  email: string;
+  password: string;
 }
 
 export function LoginPage(): JSX.Element {
-    const navigate = useNavigate();
-    const { register, handleSubmit, formState: { errors } } = useForm<userDetails>();
-    const [invalidLogin, setInvalidLogin] = useState<String | null>(null);
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
-    const makeLogin: SubmitHandler<userDetails> = (data) => {
-        // Simple credentials object matching exactly what the backend expects
-        const credentials = {
-            email: data.email,
-            password: data.password
-        };
-        
-        console.log("Attempting login with:", credentials);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>();
 
-        // Clear any previous error message
-        setInvalidLogin(null);
+  const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
+    setServerError(null);
+    setLoading(true);
 
-        axiosJWT.post("http://localhost:8080/CoupCouponAPI/Login/Login", credentials, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-        })
-        .then((response) => {
-            console.log("Login successful, full response:", response);
-            
-            if (!response.headers["authorization"] && !response.headers["Authorization"]) {
-                console.error("No authorization header in response");
-                setInvalidLogin("Login failed: No authorization token received");
-                return;
-            }
+    try {
+      const response = await authService.login({
+        email: data.email,
+        password: data.password,
+      });
 
-            // Handle case sensitivity in header names
-            const authHeader = response.headers["authorization"] || response.headers["Authorization"];
-            const JWT = authHeader.split(" ")[1];
-            
-            try {
-                const decode_jwt = jwtDecode<jwtData>(JWT);
-                console.log("Decoded JWT:", decode_jwt);
-            
-                let myAuth = {
-                    id: decode_jwt.id,
-                    email: decode_jwt.sub,
-                    userType: decode_jwt.userType,
-                    name: decode_jwt.name,
-                    token: JWT,
-                    isLoggedIn: true
-                };
+      const authState: AuthState = {
+        id: response.userId,
+        email: data.email,
+        name: response.name,
+        userType: response.userType,
+        token: response.accessToken,
+        isLoggedIn: true,
+      };
 
-                console.log("Setting auth state:", myAuth);
-                store.dispatch(loginAction(myAuth));
+      dispatch(login(authState));
 
-                if(myAuth.userType === "ADMIN"){
-                    navigate(`/adminMenu/${myAuth.id}`);
-                }
-                else if(myAuth.userType === "COMPANY"){
-                    navigate(`/companyMenu/${myAuth.id}`);
-                }
-                else if(myAuth.userType === "CUSTOMER"){
-                    navigate(`/customerMenu/${myAuth.id}`);
-                }
-            } catch (error) {
-                console.error("JWT decode error:", error);
-                setInvalidLogin("Login failed: Invalid token format");
-            }
-        })
-        .catch((error) => {
-            console.error("Login error:", error);
-            
-            if (error.response) {
-                console.error("Response data:", error.response.data);
-                console.error("Response status:", error.response.status);
-                console.error("Response headers:", error.response.headers);
-                
-                if (error.response.status === 400) {
-                    setInvalidLogin("Invalid email or password. Make sure you're using an existing account.");
-                } else if (error.response.status === 401) {
-                    setInvalidLogin("Unauthorized: Please check your credentials");
-                } else {
-                    setInvalidLogin(`Error: ${error.response.data || "Unknown server error"}`);
-                }
-            } else if (error.request) {
-                console.error("No response received:", error.request);
-                setInvalidLogin("Server not responding. Please try again later.");
-            } else {
-                console.error("Error message:", error.message);
-                setInvalidLogin(`Error: ${error.message}`);
-            }
-        });
+      if (response.refreshToken) {
+        localStorage.setItem('refreshToken', response.refreshToken);
+      }
+
+      // Navigate to role-based dashboard
+      switch (response.userType) {
+        case 'ADMIN':
+          navigate(`/admin/${response.userId}`);
+          break;
+        case 'COMPANY':
+          navigate(`/company/${response.userId}`);
+          break;
+        case 'CUSTOMER':
+          navigate(`/customer/${response.userId}`);
+          break;
+        default:
+          navigate('/');
+      }
+    } catch (error: any) {
+      if (error.response) {
+        if (error.response.status === 400 || error.response.status === 401) {
+          setServerError('Invalid email or password.');
+        } else {
+          setServerError('An unexpected error occurred. Please try again.');
+        }
+      } else {
+        setServerError('Server not responding. Please try again later.');
+      }
+    } finally {
+      setLoading(false);
     }
+  };
 
+  return (
+    <PageTransition>
+      <AuthLayout title="Welcome back" subtitle="Sign in to your account to continue">
+        {serverError && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setServerError(null)}>
+            {serverError}
+          </Alert>
+        )}
 
-    return (
-        <div className="LoginPage"> 
-            <img src={BlueLogo} alt="CoupCoupon Logo" className="LogoHeader" onClick={() => navigate("/")}/>
-            <div className="LoginPage Box">
-                <div className="LoginTitle">
-                    <h1>Log in</h1>
-                    <p>Don't have an account? <Link to="/register">Sign up</Link></p>
-                </div>
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <TextField
+            fullWidth
+            label="Email Address"
+            type="email"
+            placeholder="you@example.com"
+            margin="normal"
+            error={!!errors.email}
+            helperText={
+              errors.email?.type === 'required'
+                ? 'Email is required'
+                : errors.email?.type === 'pattern'
+                ? 'Invalid email format'
+                : ''
+            }
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailIcon color="action" fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+            {...register('email', {
+              required: true,
+              pattern: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/i,
+            })}
+          />
 
-            <div className="LoginForm">
-                <form onSubmit={handleSubmit(makeLogin)}>
-                    <label>Email Address</label> <br />
-                    <input type="email" placeholder="Enter your email adress" {...register("email",{required:true,pattern:/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/i})} />
-                    {errors.email?.type == "required" && <><br /> <span className="error-message" >Email is required</span></>} 
-                    {errors.email?.type == "pattern" && <><br /> <span className="error-message">Invalid email format</span></>}
-                    <br /><br />
+          <TextField
+            fullWidth
+            label="Password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Enter your password"
+            margin="normal"
+            error={!!errors.password}
+            helperText={
+              errors.password?.type === 'required'
+                ? 'Password is required'
+                : errors.password?.type === 'minLength'
+                ? 'Password must be at least 5 characters'
+                : ''
+            }
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockIcon color="action" fontSize="small" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                    size="small"
+                    aria-label={showPassword ? 'hide password' : 'show password'}
+                  >
+                    {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            {...register('password', {
+              required: true,
+              minLength: 5,
+            })}
+          />
 
-                    <label>Password</label> <br />
-                    <input type="password" placeholder="Enter your password" {...register("password",{required:true,minLength:5,maxLength:14})} />
-                    {errors.password?.type == "required" && <><br /><span className="error-message">Password is required</span></>}
-                    {errors.password?.type == "minLength" && <><br /><span className="error-message">Password must be 5 characters long</span></>}
-                    {errors.password?.type == "maxLength" && <><br /><span className="error-message">Password must be 14 characters long</span></>}
-                    <br /><br />
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            size="large"
+            disabled={loading}
+            sx={{ mt: 3, mb: 2, py: 1.5 }}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+          </Button>
+        </Box>
 
-                    <button type="submit">Login</button>
-                    {invalidLogin && <><br /><br /> <span className="invalid-error">{invalidLogin}</span></>}
-                </form>
-                
-            </div>
-        </div>
-    </div>    
-    );
+        <Typography variant="body2" align="center" color="text.secondary">
+          Don't have an account?{' '}
+          <Typography
+            component={Link}
+            to="/register"
+            variant="body2"
+            color="primary"
+            sx={{ fontWeight: 600, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+          >
+            Sign up
+          </Typography>
+        </Typography>
+      </AuthLayout>
+    </PageTransition>
+  );
 }

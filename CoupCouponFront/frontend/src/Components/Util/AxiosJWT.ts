@@ -1,41 +1,62 @@
 import axios from "axios";
-import { updateTokenAction } from "../Redux/AuthReducer";
+import { loginAction, logoutAction } from "../Redux/AuthReducer";
 import { store } from "../Redux/store";
 
-
-const axiosJWT = axios.create();
+const axiosJWT = axios.create({
+    timeout: 10000,
+});
 
 axiosJWT.interceptors.request.use(
     request => {
-        const token = store.getState().auth.token || sessionStorage.getItem("jwt");
+        const token = store.getState().auth.token;
         if (token && !request.headers.Authorization) {
             request.headers.Authorization = `Bearer ${token}`;
         }
         return request;
     },
-    error => {
-        return Promise.reject(error);
-    }
+    error => Promise.reject(error)
 );
 
 axiosJWT.interceptors.response.use(
-    response => {
-        const newToken = response.headers.authorization?.split(" ")[1]; // Remove 'Bearer' prefix if present
-        if (newToken) {
+    response => response,
+    async error => {
+        const originalRequest = error.config;
 
-            store.dispatch(updateTokenAction(newToken));
-            sessionStorage.setItem("jwt", newToken);
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            const refreshToken = localStorage.getItem("refreshToken");
+            if (!refreshToken) {
+                store.dispatch(logoutAction());
+                return Promise.reject(error);
+            }
+
+            try {
+                const response = await axios.post(
+                    `${import.meta.env.VITE_API_URL}/auth/refresh`,
+                    { refreshToken }
+                );
+
+                const { accessToken, refreshToken: newRefreshToken } = response.data;
+
+                const currentAuth = store.getState().auth;
+                store.dispatch(loginAction({
+                    ...currentAuth,
+                    token: accessToken,
+                }));
+                localStorage.setItem("refreshToken", newRefreshToken);
+
+                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                return axiosJWT(originalRequest);
+            } catch (refreshError) {
+                store.dispatch(logoutAction());
+                localStorage.removeItem("refreshToken");
+                return Promise.reject(refreshError);
+            }
         }
-        return response;
-    },
-    error => {
-        if (error.response && error.response.headers.authorization) {
-            console.log("error.response.headers.authorization axiosJWT: ", error.response.headers.authorization);
-        }
+
         return Promise.reject(error);
     }
 );
 
 export default axiosJWT;
-
-

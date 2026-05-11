@@ -10,8 +10,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.stereotype.Component;
 
-@Order(1)
-@Component
+//@Order(1)
+//@Component
 @RequiredArgsConstructor
 public class Test implements CommandLineRunner {
 

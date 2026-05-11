@@ -1,517 +1,539 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, Pagination, IconButton, InputAdornment, Box, Chip, Tooltip } from "@mui/material";
-import "./GetAllCompanies.css";
-import { useEffect, useState } from "react";
-import { CompanyDetails } from "../../../Model/CompanyDetails";
-import { SingleCompany } from "../../SingleCompany/SingleCompany";
-import { addCompanyAction, getCompaniesAction, deleteCompanyAction, updateCompanyAction } from "../../../Redux/AdminReducer";
-import { store } from "../../../Redux/store";
-import axiosJWT from "../../../Util/AxiosJWT";
-import { useNavigate } from "react-router-dom";
-import { checkData } from "../../../Util/checkData";
-import { Search as SearchIcon, Refresh as RefreshIcon, Delete as DeleteIcon, Edit as EditIcon, Business as BusinessIcon, Add as AddIcon } from '@mui/icons-material';
-import { CouponDetails } from "../../../Model/CouponDetails";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Pagination,
+  Paper,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Business as BusinessIcon,
+  Visibility as ViewIcon,
+} from '@mui/icons-material';
 
-/**
- * GetAllCompanies component that displays a list of all companies and provides functionality to add, update, and delete companies.
- * @returns {JSX.Element} The rendered GetAllCompanies component.
- */
+import { useAppDispatch, useAppSelector } from '../../../../hooks/useAppStore';
+import { setCompanies, addCompany, updateCompany, deleteCompany } from '../../../../store';
+import type { Company } from '../../../../types';
+import axiosJWT from '../../../Util/AxiosJWT';
+import {
+  SearchBar,
+  ConfirmDialog,
+  EmptyState,
+  PageHeader,
+  PageTransition,
+} from '../../../shared';
+
+// ── Constants ─────────────────────────────────────────────────────────
+const ROWS_PER_PAGE = 10;
+
+const headerCellSx = {
+  fontWeight: 700,
+  fontSize: '0.8rem',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.05em',
+  color: 'text.secondary',
+  borderBottom: 2,
+  borderColor: 'divider',
+  py: 1.5,
+  whiteSpace: 'nowrap' as const,
+};
+
+// ── Form types ────────────────────────────────────────────────────────
+interface CompanyFormData {
+  name: string;
+  email: string;
+  password: string;
+}
+
+interface FormErrors {
+  name?: string;
+  email?: string;
+  password?: string;
+}
+
+const EMPTY_FORM: CompanyFormData = { name: '', email: '', password: '' };
+
+function validateForm(data: CompanyFormData, isUpdate = false): FormErrors {
+  const errors: FormErrors = {};
+  if (!data.name.trim()) errors.name = 'Company name is required';
+  if (!data.email.trim()) errors.email = 'Email is required';
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
+    errors.email = 'Invalid email format';
+  if (!isUpdate) {
+    if (!data.password.trim()) errors.password = 'Password is required';
+    else if (data.password.length < 5)
+      errors.password = 'Password must be at least 5 characters';
+  }
+  return errors;
+}
+
+// ── Component ─────────────────────────────────────────────────────────
 export function GetAllCompanies(): JSX.Element {
-    const [companies, setCompanies] = useState<CompanyDetails[]>([]);
-    const [filteredCompanies, setFilteredCompanies] = useState<CompanyDetails[]>([]);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedCompany, setSelectedCompany] = useState<CompanyDetails | null>(null);
-    const [open, setOpen] = useState(false);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [companyToDelete, setCompanyToDelete] = useState<number | null>(null);
-    const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
-    const [companyToUpdate, setCompanyToUpdate] = useState<CompanyDetails | null>(null);
-    const [emailExistsError, setEmailExistsError] = useState<string | null>(null);
-    const [passwordError, setPasswordError] = useState<string | null>(null);
-    const [addCompanyDialogOpen, setAddCompanyDialogOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    
-    // Pagination state
-    const [page, setPage] = useState(1);
-    const [rowsPerPage] = useState(5);
-    
-    const [companyToAdd, setCompanyToAdd] = useState<CompanyDetails>({
-        id: 0,
-        name: '',
-        email: '',
-        password: '',
-        coupons: []
-    });
+  const dispatch = useAppDispatch();
+  const companies = useAppSelector((s) => s.admin.companies);
 
-    const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
 
-    // useEffect hook to fetch companies when the component mounts
-    useEffect(() => {
-        checkData();
-        const fetchCompanies = async () => {
-            setIsLoading(true);
-            try {
-                const response = await axiosJWT.get("http://localhost:8080/CoupCouponAPI/Admin/GetAllCompanies");
-                console.log("Companies:", response.data);
-                store.dispatch(getCompaniesAction(response.data));
-                setCompanies(store.getState().admin.companies);
-                setFilteredCompanies(store.getState().admin.companies);
-            } catch (error) {
-                console.error("Error fetching companies:", error);
-                checkData();
-                navigate("/login");
-            } finally {
-                setIsLoading(false);
-            }
-        };
+  // Add dialog
+  const [addOpen, setAddOpen] = useState(false);
+  const [addForm, setAddForm] = useState<CompanyFormData>(EMPTY_FORM);
+  const [addErrors, setAddErrors] = useState<FormErrors>({});
+  const [addSubmitting, setAddSubmitting] = useState(false);
 
-        if (store.getState().admin.companies.length === 0) {
-            fetchCompanies();
-        } else {
-            setCompanies(store.getState().admin.companies);
-            setFilteredCompanies(store.getState().admin.companies);
+  // Edit dialog
+  const [editOpen, setEditOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<CompanyFormData>(EMPTY_FORM);
+  const [editErrors, setEditErrors] = useState<FormErrors>({});
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  // Delete
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // ── Fetch ────────────────────────────────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    const fetchCompanies = async () => {
+      setLoading(true);
+      try {
+        const { data } = await axiosJWT.get(
+          `${import.meta.env.VITE_API_URL}/admin/companies`
+        );
+        if (!cancelled) {
+          const list = Array.isArray(data) ? data : data.content ?? [];
+          dispatch(setCompanies(list));
         }
-    }, [navigate]);
-
-    // Search filter effect
-    useEffect(() => {
-        if (searchTerm.trim() === "") {
-            setFilteredCompanies(companies);
-        } else {
-            const lowercasedSearchTerm = searchTerm.toLowerCase();
-            const filtered = companies.filter(
-                company => 
-                    company.name.toLowerCase().includes(lowercasedSearchTerm) ||
-                    company.email.toLowerCase().includes(lowercasedSearchTerm)
-            );
-            setFilteredCompanies(filtered);
-        }
-        // Reset to first page when filtering
-        setPage(1);
-    }, [searchTerm, companies]);
-
-    // Handle row click to view company details
-    const handleRowClick = (company: CompanyDetails) => {
-        console.log("Company coupons:", company.coupons);
-        setSelectedCompany(company);
-        setOpen(true);
+      } catch (err) {
+        console.error('Failed to fetch companies:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
+    fetchCompanies();
+    return () => { cancelled = true; };
+  }, [dispatch]);
 
-    // Handle close dialog
-    const handleClose = () => {
-        setOpen(false);
-        setSelectedCompany(null);
-    };
-
-    // Handle add company submit
-    const handleAddCompany = async () => {
-        // Validation
-        if (
-            !companyToAdd.name.trim() ||
-            !companyToAdd.email.trim() ||
-            !companyToAdd.password.trim()
-        ) {
-            setEmailExistsError("All fields are required");
-            return;
-        }
-
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(companyToAdd.email)) {
-            setEmailExistsError("Invalid email format");
-            return;
-        }
-
-        // Password validation
-        if (companyToAdd.password.length < 5) {
-            setPasswordError("Password must be at least 5 characters");
-            return;
-        }
-
-        try {
-            setIsLoading(true);
-            const response = await axiosJWT.post("http://localhost:8080/CoupCouponAPI/Admin/AddCompany", companyToAdd);
-            
-            console.log("Company added successfully:", response.data);
-            
-            // Update Redux store
-            const addedCompany = {
-                ...companyToAdd,
-                id: response.data.id, // Use the ID from the response
-                coupons: [] // Initialize with empty coupons array
-            };
-            
-            store.dispatch(addCompanyAction(addedCompany));
-            setCompanies([...companies, addedCompany]);
-            
-            // Reset form & close dialog
-            setCompanyToAdd({
-                id: 0,
-                name: '',
-                email: '',
-                password: '',
-                coupons: []
-            });
-            setEmailExistsError(null);
-            setPasswordError(null);
-            setAddCompanyDialogOpen(false);
-        } catch (error) {
-            console.error("Error adding company:", error);
-            setEmailExistsError("Email already exists or server error");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    
-    // Handle delete company action
-    const handleDeleteCompany = (companyId: number) => {
-        setCompanyToDelete(companyId);
-        setDeleteDialogOpen(true);
-    };
-
-    // Confirm delete company action
-    const confirmDeleteCompany = async () => {
-        if (companyToDelete !== null) {
-            setIsLoading(true);
-            try {
-                await axiosJWT.delete(`http://localhost:8080/CoupCouponAPI/Admin/DeleteCompany/${companyToDelete}`);
-                
-                // Update Redux store and local state
-                store.dispatch(deleteCompanyAction(companyToDelete));
-                const updatedCompanies = companies.filter(company => company.id !== companyToDelete);
-                setCompanies(updatedCompanies);
-                
-                setDeleteDialogOpen(false);
-                setCompanyToDelete(null);
-            } catch (error) {
-                console.error("Error deleting company:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        }
-    };
-
-    // Handle update company action
-    const handleUpdateCompany = (company: CompanyDetails) => {
-        setCompanyToUpdate({ ...company });
-        setUpdateDialogOpen(true);
-    };
-
-    // Handle update submit
-    const handleUpdate = async () => {
-        if (!companyToUpdate) return;
-        
-        // Validation
-        if (
-            !companyToUpdate.name.trim() ||
-            !companyToUpdate.email.trim()
-        ) {
-            setEmailExistsError("All fields are required");
-            return;
-        }
-
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(companyToUpdate.email)) {
-            setEmailExistsError("Invalid email format");
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            await axiosJWT.put(`http://localhost:8080/CoupCouponAPI/Admin/UpdateCompany`, companyToUpdate);
-            
-            // Update Redux store and local state
-            store.dispatch(updateCompanyAction(companyToUpdate, companyToUpdate.id));
-            const updatedCompanies = companies.map(company => 
-                company.id === companyToUpdate.id ? companyToUpdate : company
-            );
-            setCompanies(updatedCompanies);
-            
-            setUpdateDialogOpen(false);
-            setCompanyToUpdate(null);
-            setEmailExistsError(null);
-        } catch (error) {
-            console.error("Error updating company:", error);
-            setEmailExistsError("Email already exists or server error");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Refresh companies data
-    const handleRefresh = async () => {
-        setIsLoading(true);
-        try {
-            const response = await axiosJWT.get("http://localhost:8080/CoupCouponAPI/Admin/GetAllCompanies");
-            store.dispatch(getCompaniesAction(response.data));
-            setCompanies(response.data);
-            setSearchTerm("");
-        } catch (error) {
-            console.error("Error refreshing companies:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Get current page items
-    const getCurrentPageItems = () => {
-        const startIndex = (page - 1) * rowsPerPage;
-        return filteredCompanies.slice(startIndex, startIndex + rowsPerPage);
-    };
-
-    // Handle page change
-    const handlePageChange = (event: React.ChangeEvent<unknown>, newPage: number) => {
-        setPage(newPage);
-    };
-
-    return (
-        <div className="GetAllCompanies">
-            <h1>Company Management</h1>
-            
-            <div className="table-actions-container">
-                <div className="search-filter-container">
-                    <TextField
-                        placeholder="Search companies..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <SearchIcon />
-                                </InputAdornment>
-                            )
-                        }}
-                        variant="outlined"
-                        size="small"
-                    />
-                    
-                    <Tooltip title="Refresh data">
-                        <IconButton onClick={handleRefresh} className="refresh-button">
-                            <RefreshIcon />
-                        </IconButton>
-                    </Tooltip>
-                </div>
-                
-                <Button 
-                    variant="contained" 
-                    startIcon={<AddIcon />}
-                    onClick={() => setAddCompanyDialogOpen(true)}
-                    className="add-button">
-                    Add Company
-                </Button>
-            </div>
-
-            <TableContainer component={Paper} className="table-container">
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>ID</TableCell>
-                            <TableCell>Company Name</TableCell>
-                            <TableCell>Email</TableCell>
-                            <TableCell>Coupons</TableCell>
-                            <TableCell>Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {getCurrentPageItems().map((company) => (
-                            <TableRow key={company.id}>
-                                <TableCell>{company.id}</TableCell>
-                                <TableCell>{company.name}</TableCell>
-                                <TableCell>{company.email}</TableCell>
-                                <TableCell>
-                                    <Chip 
-                                        label={`${company.coupons?.length || 0} coupons`} 
-                                        color={company.coupons?.length ? "primary" : "default"}
-                                        size="small"
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                                        <Tooltip title="View details">
-                                            <IconButton onClick={() => handleRowClick(company)} color="info" size="small">
-                                                <BusinessIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title="Edit company">
-                                            <IconButton onClick={() => handleUpdateCompany(company)} color="primary" size="small">
-                                                <EditIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title="Delete company">
-                                            <IconButton onClick={() => handleDeleteCompany(company.id)} color="error" size="small">
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </Box>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                        {filteredCompanies.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={5} align="center">
-                                    <Typography variant="body1" color="textSecondary">
-                                        {searchTerm ? "No companies found matching your search" : "No companies found"}
-                                    </Typography>
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-            
-            {filteredCompanies.length > 0 && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-                    <Pagination 
-                        count={Math.ceil(filteredCompanies.length / rowsPerPage)} 
-                        page={page} 
-                        onChange={handlePageChange} 
-                        color="primary" 
-                    />
-                </Box>
-            )}
-
-            {/* View Company Dialog */}
-            <Dialog
-                open={open}
-                onClose={handleClose}
-                maxWidth="md"
-            >
-                <DialogTitle>Company Details</DialogTitle>
-                <DialogContent>
-                    {selectedCompany && <SingleCompany open={open} onClose={handleClose} company={selectedCompany} />}
-                </DialogContent>
-            </Dialog>
-
-            {/* Delete Company Dialog */}
-            <Dialog
-                open={deleteDialogOpen}
-                onClose={() => setDeleteDialogOpen(false)}
-            >
-                <DialogTitle>Confirm Delete</DialogTitle>
-                <DialogContent>
-                    <Typography>
-                        Are you sure you want to delete this company? This action cannot be undone.
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
-                        Cancel
-                    </Button>
-                    <Button onClick={confirmDeleteCompany} color="error">
-                        Delete
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Update Company Dialog */}
-            <Dialog
-                open={updateDialogOpen}
-                onClose={() => {
-                    setUpdateDialogOpen(false);
-                    setEmailExistsError(null);
-                }}
-            >
-                <DialogTitle>Update Company</DialogTitle>
-                <DialogContent>
-                    {companyToUpdate && (
-                        <>
-                            <TextField
-                                label="Company Name"
-                                value={companyToUpdate.name}
-                                onChange={(e) => setCompanyToUpdate({ ...companyToUpdate, name: e.target.value })}
-                                fullWidth
-                                margin="normal"
-                            />
-                            <TextField
-                                label="Email"
-                                value={companyToUpdate.email}
-                                onChange={(e) => setCompanyToUpdate({ ...companyToUpdate, email: e.target.value })}
-                                fullWidth
-                                margin="normal"
-                                error={!!emailExistsError}
-                                helperText={emailExistsError}
-                            />
-                        </>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => {
-                        setUpdateDialogOpen(false);
-                        setEmailExistsError(null);
-                    }} color="primary">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleUpdate} color="primary">
-                        Update
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Add Company Dialog */}
-            <Dialog
-                open={addCompanyDialogOpen}
-                onClose={() => {
-                    setAddCompanyDialogOpen(false);
-                    setEmailExistsError(null);
-                    setPasswordError(null);
-                    setCompanyToAdd({
-                        id: 0,
-                        name: '',
-                        email: '',
-                        password: '',
-                        coupons: []
-                    });
-                }}
-            >
-                <DialogTitle>Add New Company</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        label="Company Name"
-                        value={companyToAdd.name}
-                        onChange={(e) => setCompanyToAdd({ ...companyToAdd, name: e.target.value })}
-                        fullWidth
-                        margin="normal"
-                    />
-                    <TextField
-                        label="Email"
-                        value={companyToAdd.email}
-                        onChange={(e) => setCompanyToAdd({ ...companyToAdd, email: e.target.value })}
-                        fullWidth
-                        margin="normal"
-                        error={!!emailExistsError}
-                        helperText={emailExistsError}
-                    />
-                    <TextField
-                        label="Password"
-                        value={companyToAdd.password}
-                        onChange={(e) => setCompanyToAdd({ ...companyToAdd, password: e.target.value })}
-                        fullWidth
-                        margin="normal"
-                        type="password"
-                        error={!!passwordError}
-                        helperText={passwordError}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => {
-                        setAddCompanyDialogOpen(false);
-                        setEmailExistsError(null);
-                        setPasswordError(null);
-                        setCompanyToAdd({
-                            id: 0,
-                            name: '',
-                            email: '',
-                            password: '',
-                            coupons: []
-                        });
-                    }} color="primary">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleAddCompany} color="primary">
-                        Add
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </div>
+  // ── Filtering / pagination ──────────────────────────────────────
+  const filtered = useMemo(() => {
+    if (!searchTerm.trim()) return companies;
+    const q = searchTerm.toLowerCase();
+    return companies.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q)
     );
+  }, [companies, searchTerm]);
+
+  const pageCount = Math.ceil(filtered.length / ROWS_PER_PAGE);
+  const paginated = filtered.slice(
+    (page - 1) * ROWS_PER_PAGE,
+    page * ROWS_PER_PAGE
+  );
+
+  useEffect(() => { setPage(1); }, [searchTerm]);
+
+  // ── Add handler ─────────────────────────────────────────────────
+  const openAddDialog = useCallback(() => {
+    setAddForm(EMPTY_FORM);
+    setAddErrors({});
+    setAddOpen(true);
+  }, []);
+
+  const handleAddSubmit = useCallback(async () => {
+    const errors = validateForm(addForm);
+    setAddErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    setAddSubmitting(true);
+    try {
+      const { data } = await axiosJWT.post(
+        `${import.meta.env.VITE_API_URL}/admin/companies`,
+        {
+          name: addForm.name.trim(),
+          email: addForm.email.trim(),
+          password: addForm.password,
+        }
+      );
+      const created: Company = data.id
+        ? data
+        : { id: data, name: addForm.name.trim(), email: addForm.email.trim(), coupons: [] };
+      dispatch(addCompany(created));
+      setAddOpen(false);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Failed to add company. Email may already exist.';
+      setAddErrors({ email: msg });
+    } finally {
+      setAddSubmitting(false);
+    }
+  }, [addForm, dispatch]);
+
+  // ── Edit handler ────────────────────────────────────────────────
+  const openEditDialog = useCallback((c: Company) => {
+    setEditId(c.id);
+    setEditForm({ name: c.name, email: c.email, password: '' });
+    setEditErrors({});
+    setEditOpen(true);
+  }, []);
+
+  const handleEditSubmit = useCallback(async () => {
+    if (editId === null) return;
+    const errors = validateForm(editForm, true);
+    setEditErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    setEditSubmitting(true);
+    try {
+      await axiosJWT.put(
+        `${import.meta.env.VITE_API_URL}/admin/companies/${editId}`,
+        {
+          id: editId,
+          name: editForm.name.trim(),
+          email: editForm.email.trim(),
+          ...(editForm.password ? { password: editForm.password } : {}),
+        }
+      );
+      dispatch(
+        updateCompany({
+          id: editId,
+          name: editForm.name.trim(),
+          email: editForm.email.trim(),
+          coupons: companies.find((c) => c.id === editId)?.coupons ?? [],
+        })
+      );
+      setEditOpen(false);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Failed to update company.';
+      setEditErrors({ email: msg });
+    } finally {
+      setEditSubmitting(false);
+    }
+  }, [editForm, editId, dispatch, companies]);
+
+  // ── Delete handler ──────────────────────────────────────────────
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      await axiosJWT.delete(
+        `${import.meta.env.VITE_API_URL}/admin/companies/${deleteTarget.id}`
+      );
+      dispatch(deleteCompany(deleteTarget.id));
+      setDeleteOpen(false);
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error('Failed to delete company:', err);
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, [deleteTarget, dispatch]);
+
+  // ── Skeleton ────────────────────────────────────────────────────
+  const renderSkeleton = () =>
+    Array.from({ length: 5 }).map((_, i) => (
+      <TableRow key={i}>
+        {Array.from({ length: 5 }).map((_, j) => (
+          <TableCell key={j}>
+            <Skeleton variant="text" animation="wave" />
+          </TableCell>
+        ))}
+      </TableRow>
+    ));
+
+  // ── Form fields helper ──────────────────────────────────────────
+  const renderFormFields = (
+    form: CompanyFormData,
+    setForm: React.Dispatch<React.SetStateAction<CompanyFormData>>,
+    errors: FormErrors,
+    isUpdate: boolean
+  ) => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+      <TextField
+        label="Company Name"
+        required
+        fullWidth
+        size="small"
+        value={form.name}
+        onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+        error={!!errors.name}
+        helperText={errors.name}
+      />
+      <TextField
+        label="Email"
+        required
+        fullWidth
+        size="small"
+        type="email"
+        value={form.email}
+        onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+        error={!!errors.email}
+        helperText={errors.email}
+      />
+      <TextField
+        label={isUpdate ? 'New Password (leave blank to keep)' : 'Password'}
+        required={!isUpdate}
+        fullWidth
+        size="small"
+        type="password"
+        value={form.password}
+        onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+        error={!!errors.password}
+        helperText={errors.password}
+      />
+    </Box>
+  );
+
+  return (
+    <PageTransition>
+      <PageHeader
+        title="Company Management"
+        subtitle={
+          loading
+            ? 'Loading companies...'
+            : `${companies.length} compan${companies.length !== 1 ? 'ies' : 'y'} registered`
+        }
+        action={
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={openAddDialog}
+            sx={{ borderRadius: '12px', textTransform: 'none', fontWeight: 600, px: 3 }}
+          >
+            Add Company
+          </Button>
+        }
+      />
+
+      {/* Search */}
+      <Box sx={{ maxWidth: 420, mb: 3 }}>
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Search by name or email..."
+        />
+      </Box>
+
+      {/* Table */}
+      {loading ? (
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{ borderRadius: '16px', border: 1, borderColor: 'divider' }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow>
+                {['Name', 'Email', 'Coupons', 'Actions'].map((h) => (
+                  <TableCell key={h} sx={headerCellSx}>{h}</TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>{renderSkeleton()}</TableBody>
+          </Table>
+        </TableContainer>
+      ) : filtered.length === 0 ? (
+        <Paper
+          elevation={0}
+          sx={{ borderRadius: '16px', border: 1, borderColor: 'divider', overflow: 'hidden' }}
+        >
+          <EmptyState
+            title={searchTerm ? 'No companies match your search' : 'No companies yet'}
+            description={
+              searchTerm
+                ? 'Try adjusting your search to find what you\'re looking for.'
+                : 'Add your first company to get started.'
+            }
+            icon={<BusinessIcon sx={{ fontSize: 64 }} />}
+            action={!searchTerm ? { label: 'Add Company', onClick: openAddDialog } : undefined}
+          />
+        </Paper>
+      ) : (
+        <>
+          <TableContainer
+            component={Paper}
+            elevation={0}
+            sx={{ borderRadius: '16px', border: 1, borderColor: 'divider' }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={headerCellSx}>Name</TableCell>
+                  <TableCell sx={headerCellSx}>Email</TableCell>
+                  <TableCell sx={headerCellSx} align="center">Coupons</TableCell>
+                  <TableCell sx={headerCellSx} align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginated.map((company) => (
+                  <TableRow key={company.id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Box
+                          sx={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: '10px',
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                          }}
+                        >
+                          {company.name.charAt(0).toUpperCase()}
+                        </Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {company.name}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {company.email}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Chip
+                        label={company.coupons?.length || 0}
+                        size="small"
+                        color={company.coupons?.length ? 'primary' : 'default'}
+                        sx={{ fontWeight: 600, borderRadius: '8px', minWidth: 32 }}
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                        <Tooltip title="Edit company">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => openEditDialog(company)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete company">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => {
+                              setDeleteTarget({ id: company.id, name: company.name });
+                              setDeleteOpen(true);
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {pageCount > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+              <Pagination
+                count={pageCount}
+                page={page}
+                onChange={(_e, v) => setPage(v)}
+                color="primary"
+                shape="rounded"
+              />
+            </Box>
+          )}
+        </>
+      )}
+
+      {/* ── Add Company Dialog ────────────────────────────────────── */}
+      <Dialog
+        open={addOpen}
+        onClose={addSubmitting ? undefined : () => setAddOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '16px' } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Add New Company</DialogTitle>
+        <DialogContent>{renderFormFields(addForm, setAddForm, addErrors, false)}</DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setAddOpen(false)} disabled={addSubmitting} sx={{ borderRadius: '8px', textTransform: 'none' }}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleAddSubmit}
+            disabled={addSubmitting}
+            sx={{ borderRadius: '8px', textTransform: 'none', minWidth: 100 }}
+          >
+            {addSubmitting ? <CircularProgress size={20} color="inherit" /> : 'Add Company'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ── Edit Company Dialog ───────────────────────────────────── */}
+      <Dialog
+        open={editOpen}
+        onClose={editSubmitting ? undefined : () => setEditOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '16px' } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Update Company</DialogTitle>
+        <DialogContent>{renderFormFields(editForm, setEditForm, editErrors, true)}</DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setEditOpen(false)} disabled={editSubmitting} sx={{ borderRadius: '8px', textTransform: 'none' }}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleEditSubmit}
+            disabled={editSubmitting}
+            sx={{ borderRadius: '8px', textTransform: 'none', minWidth: 100 }}
+          >
+            {editSubmitting ? <CircularProgress size={20} color="inherit" /> : 'Save Changes'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ── Delete Confirmation ───────────────────────────────────── */}
+      <ConfirmDialog
+        open={deleteOpen}
+        title="Delete Company"
+        message={
+          deleteTarget
+            ? `Are you sure you want to delete "${deleteTarget.name}"? All associated coupons will also be removed. This action cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        confirmColor="error"
+        loading={deleteLoading}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => { setDeleteOpen(false); setDeleteTarget(null); }}
+      />
+    </PageTransition>
+  );
 }
